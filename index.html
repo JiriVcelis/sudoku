@@ -158,6 +158,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .tabs button { font: 500 0.85rem var(--f-body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
 .tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.tabs button.attn { border-color: var(--bad); }
+.tabs .badge { display: inline-block; min-width: 1.3em; padding: 0 5px; margin-left: 2px; border-radius: 999px; background: var(--bad); color: #fff; font-size: 0.72rem; font-weight: 700; line-height: 1.35; text-align: center; }
 .tbl { overflow-x: auto; }
 .tbl table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .tbl th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--line); }
@@ -168,6 +170,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tbl .legend { margin: 8px 0 0; font-size: 0.8rem; color: var(--muted); }
 .tbl .legend b { color: var(--bad); font-weight: 600; }
 .dbg { color: var(--learn); font-weight: 700; }
+.env-dbg { font-size: 0.4em; color: var(--learn); vertical-align: middle; }
+.env-dbg[hidden] { display: none; }
 .dbg-reset { display: grid; gap: 8px; justify-items: start; padding-left: 28px; max-width: 460px; }
 .dbg-reset .confirm { justify-self: stretch; }
 .dbg-msg { font-size: 0.85rem; color: var(--muted); }
@@ -195,6 +199,18 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .top-note { margin: 0; font-size: 0.8rem; color: var(--muted); }
 .top-review { margin: 0; padding: 10px 12px; border: 1px solid var(--bad); border-radius: 8px; background: var(--bad-soft); color: var(--ink); font-weight: 600; }
 .tbl .empty { color: var(--muted); font-size: 0.9rem; padding: 6px 0; }
+.review-box { border: 1px dashed var(--bad); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
+.review-box h3 { margin: 0; font: 700 0.95rem var(--f-display); color: var(--bad); }
+.review-box p { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.review-box .acts { display: flex; gap: 6px; }
+.review-box .btn { padding: 5px 10px; font-size: 0.82rem; }
+.review-box .btn.busy { display: inline-flex; align-items: center; gap: 6px; cursor: progress; opacity: 1; }
+.review-box .btn.busy::before { content: ""; width: 0.9em; height: 0.9em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.busy-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: rgba(0, 0, 0, 0.18); cursor: progress; }
+.busy-overlay[hidden] { display: none; }
+.busy-spin { width: 44px; height: 44px; border: 4px solid #fff; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .review-box .btn.busy::before { animation-duration: 2s; } }
 .confirm { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft); font-size: 0.88rem; }
 .confirm div { display: flex; gap: 8px; }
 .confirm .btn { padding: 7px 12px; flex: 1; }
@@ -202,8 +218,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .board.solved .cell { animation: none; } }
 </style>
 <div class="wrap">
+  <div class="busy-overlay" id="busy" hidden><span class="busy-spin" aria-hidden="true"></span></div>
   <header>
-    <h1>Sudoku<span>.</span></h1>
+    <h1>Sudoku<span>.</span> <small class="env-dbg" id="env-dbg" hidden>DEBUG</small></h1>
     <div class="hdr-right">
     <button type="button" class="gear gear-start" id="newgame" data-i18n="btn.new">Nová hra</button>
     <button type="button" class="gear" id="pause" aria-label="Pauza"><span class="pl-txt" id="pause-txt">Pauza</span><svg class="pl-ico ico-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect><rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect></svg><svg class="pl-ico ico-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4L5.7 2.1a.8.8 0 0 0-1.2.7z"></path></svg></button>
@@ -275,6 +292,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         </div>
         <span class="dbg-msg" id="all-msg" aria-live="polite"></span>
       </div>
+      <div class="dbg-reset">
+        <button type="button" class="btn" id="dbg-lock" data-i18n="dbg.lock">Odhlásit Debug</button>
+        <small class="dbg-msg" data-i18n="dbg.lock.d">Kód je uložený v tomto prohlížeči. Odhlášením ho z něj smažeš.</small>
+      </div>
       </fieldset>
     </fieldset>
     <button type="button" class="btn primary" id="settings-close" data-i18n="settings.close">Zavřít nastavení</button>
@@ -285,6 +306,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     <p class="top-review" id="top-review" hidden data-i18n="msg.review">Buď seš mistr světa v sudoku, nebo tady někdo švindluje. Tvůj výsledek bude validován.</p>
     <div class="tabs" id="top-tabs" role="tablist"></div>
     <div class="tbl" id="top-body"></div>
+    <div class="tbl review-box" id="top-review-list" hidden></div>
     <p class="top-note" id="top-note" data-i18n="top.note">Žebříček se ukládá v tomto prohlížeči.</p>
     <button type="button" class="btn primary" id="top-close" data-i18n="top.close">Zavřít žebříček</button>
   </section>
@@ -336,7 +358,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </div>
 <script src="lang/cs.js"></script>
 <script src="lang/en.js"></script>
-<script src="zebricek.js"></script>
 <script src="config.js"></script>
 <script>
 (() => {
@@ -345,8 +366,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const PRISTINE = [...document.body.children].filter(n =>
     ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
   ).map(n => n.outerHTML);
-  const EMBED = (window.SUDOKU_EMBED && typeof window.SUDOKU_EMBED === "object" && window.SUDOKU_EMBED.results) || {};
-  const EMBED_REV = String((window.SUDOKU_EMBED && window.SUDOKU_EMBED.savedAt) || 0);
+  // Se společným žebříčkem se výsledky ze souboru zebricek.js nepoužívají: když se nepodaří načíst
+  // Google tabulku, zobrazí se jen výsledky z tohoto prohlížeče (u nového hráče prázdný seznam).
+  const SHARED = !!String((window.SUDOKU_CONFIG && window.SUDOKU_CONFIG.scoresUrl) || "").trim();
+  // Stará záloha žebříčku (zebricek.js) už není potřeba – data jsou v Google tabulce; uklidí se i její stopy v prohlížeči.
+  try { ["sudoku-embed-nodebug", "sudoku-embed-hidden"].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  const EMBED = (!SHARED && window.SUDOKU_EMBED && typeof window.SUDOKU_EMBED === "object" && window.SUDOKU_EMBED.results) || {};
+  const EMBED_REV = SHARED ? "0" : String((window.SUDOKU_EMBED && window.SUDOKU_EMBED.savedAt) || 0);
 
   // ---------- jazyky ----------
   // Každý jazyk je v souboru lang/<kód>.js a registruje se do window.SUDOKU_LANGS.
@@ -473,7 +499,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   }
   function setRunning(r) { running = r && !S.done; render(); save(); if (running && sel >= 0) cells[sel].focus(); }
   const OPT = { peers: false, same: false, autonotes: false, warn: false, dup: false, lock: false, count: false, sound: true, volume: 5, learn: false, learnDelay: 5, pen: true, erase: true, unit: true, debug: false, lang: "cs" };
-  let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (jen pro toto načtení stránky).
+  let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (kód se pamatuje v tomto prohlížeči, dokud se Debug neodhlásí).
   const solvedDigit = v => S.val.reduce((n, x, i) => n + (x === v && S.sol[i] === v), 0) === 9;
   try { Object.assign(OPT, JSON.parse(localStorage.getItem("sudoku-settings")) || {}); } catch (e) {}
   const saveOpt = () => { try { localStorage.setItem("sudoku-settings", JSON.stringify(OPT)); } catch (e) {} };
@@ -687,8 +713,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const savePending = () => { try { localStorage.setItem("sudoku-pending", JSON.stringify(PENDING)); } catch (e) {} };
   async function remotePost(payload) {
     // text/plain = jednoduchý požadavek bez CORS preflightu, Apps Script ho přijme
-    const r = await fetch(SCORES_URL, { method: "POST", body: JSON.stringify({ ...payload, sheet: SCORES_SHEET }) });
-    const d = await r.json();
+    // Bez odpovědi do 20 s se požadavek zruší, aby nic nečekalo donekonečna.
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 20000);
+    let d;
+    try { const r = await fetch(SCORES_URL, { method: "POST", body: JSON.stringify({ ...payload, sheet: SCORES_SHEET }), signal: ac.signal }); d = await r.json(); }
+    finally { clearTimeout(tm); }
     if (!d || !d.ok) throw new Error((d && d.error) || "fail");
     return d;
   }
@@ -697,14 +726,28 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     flushing = true;
     const left = [];
     for (const e of PENDING.slice()) { try { await remotePost({ action: "add", entry: e }); } catch (err) { left.push(e); } }
+    const sent = PENDING.length - left.length;
     PENDING = left; savePending(); flushing = false;
     if (left.length) setNote(t("remote.pending"));
+    return sent;
   }
-  function remoteLoad() {
+  // Naposledy načtený společný žebříček se ukáže hned po otevření stránky; čerstvá data se načtou na pozadí.
+  const REMOTE_STORE = "sudoku-remote";
+  let remoteFresh = false, remoteCachedAt = 0, remoteAt = 0;
+  if (SCORES_URL) try {
+    const c = JSON.parse(localStorage.getItem(REMOTE_STORE));
+    if (c && c.m && typeof c.m === "object") {
+      const m = {}; for (const k of Object.keys(DIFF)) m[k] = Array.isArray(c.m[k]) ? c.m[k] : [];
+      REMOTE = m; remoteCachedAt = c.at || Date.now();
+    }
+  } catch (e) {}
+  function remoteLoad(again = true) {
     if (!SCORES_URL) return Promise.resolve(false);
-    // Probíhá-li načítání, po jeho dokončení se načte znovu (aby se ukázal i právě odeslaný výsledek).
-    if (remoteBusy) { remoteAgain = true; return remoteBusy; }
-    if (!REMOTE) setNote(t("remote.loading"));
+    // Probíhá-li načítání, po jeho dokončení se načte znovu (aby se ukázal i právě odeslaný výsledek);
+    // pro pouhé zobrazení (again = false) stačí to, které už běží.
+    if (remoteBusy) { if (again) remoteAgain = true; return remoteBusy; }
+    if (!remoteFresh) setNote(t("remote.loading"));
+    remoteAt = Date.now();
     remoteBusy = (async () => {
       try {
         const url = SCORES_URL + (SCORES_URL.includes("?") ? "&" : "?") + "sheet=" + encodeURIComponent(SCORES_SHEET) + "&t=" + Date.now();
@@ -712,11 +755,21 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         if (!d || !Array.isArray(d.results)) throw new Error("format");
         const m = {}; for (const k of Object.keys(DIFF)) m[k] = [];
         for (const row of d.results) if (row && m[row.level]) m[row.level].push(row);
-        REMOTE = m;
+        REMOTE = m; remoteFresh = true;
+        try { localStorage.setItem(REMOTE_STORE, JSON.stringify({ at: Date.now(), m })); } catch (e) {}
         setNote(PENDING.length && !flushing ? t("remote.pending") : t("remote.ok"));
         renderTop();
         return true;
-      } catch (e) { if (!REMOTE) setNote(t("remote.fail")); return false; }
+      } catch (e) {
+        if (!remoteFresh) {
+          // Záloha: naposledy úspěšně načtený společný žebříček z tohoto prohlížeče; jinak jen místní výsledky.
+          if (REMOTE && remoteCachedAt) {
+            const df = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+            setNote(t("remote.cached", { t: df.format(remoteCachedAt) }));
+          } else setNote(t("remote.fail"));
+        }
+        return false;
+      }
       finally {
         remoteBusy = null;
         if (remoteAgain) { remoteAgain = false; setTimeout(remoteLoad, 0); }
@@ -776,7 +829,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     TOP[entry.level] = (TOP[entry.level] || []).concat(entry).sort(byRank).slice(0, 25); saveTop();
     if (SCORES_URL) {
       PENDING.push(entry); savePending();
-      flushPending().then(remoteLoad);
+      flushPending().then(() => remoteLoad());
     }
     showTop(entry.level);
     if (entry.review) { setStatus(t("msg.review"), "warn"); $("top-review").hidden = false; }
@@ -790,12 +843,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const tabsEl = $("top-tabs");
   for (const [k, d] of Object.entries(DIFF)) {
     const b = document.createElement("button"); b.type = "button"; b.id = "tt-" + k; b.dataset.d = k; b.setAttribute("role", "tab"); b.textContent = d.name;
-    b.addEventListener("click", () => { topLv = k; renderTop(); }); tabsEl.appendChild(b);
+    b.addEventListener("click", () => { topLv = k; renderTop(); if (Date.now() - remoteAt > 10000) remoteLoad(false); }); tabsEl.appendChild(b); // přepnutí obtížnosti: hned z paměti, čerstvá data na pozadí nejvýš jednou za 10 s
   }
   function renderTop() {
     const lv = topLv;
     tabsEl.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.d === lv));
     const list = boardList(lv);
+    renderReview(); // rámeček schvalování vždy jen pro vybranou obtížnost (i když je žebříček prázdný)
     if (!list.length) { $("top-body").innerHTML = `<p class="empty">${esc(t("top.empty", { d: DIFF[lv].name }))}</p>`; return; }
     const df = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
     $("top-body").innerHTML = `<table><thead><tr><th>#</th><th>${esc(t("top.player"))}</th><th>${esc(t("top.time"))}</th><th>${esc(t("top.errors"))}</th><th>${esc(t("top.hints"))}</th><th>${esc(t("top.date"))}</th></tr></thead><tbody>` +
@@ -804,6 +858,64 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       (list.some(r => r.errors) ? '<p class="legend">' + t("top.legendPen") + '</p>' : "") +
       (list.some(r => r.debug) ? '<p class="legend"><span class="dbg">*</span>' + esc(t("top.legendDbg")) + '</p>' : "");
   }
+
+  // ---------- Schvalování podezřele rychlých výsledků (jen s odemčeným Debug kódem) ----------
+  let REVIEWQ = [], reviewBusy = null, reviewSeq = 0, reviewLoading = false, reviewAt = 0; // reviewBusy = { id, act } právě probíhající akce
+  async function loadReview(force) {
+    if (!SCORES_URL || !dbgUnlocked || (reviewLoading && !force)) return;
+    const my = ++reviewSeq; // platí jen odpověď na poslední dotaz (starší odpovědi mohou dorazit později)
+    reviewLoading = true;
+    let q; try { const d = await remotePost({ action: "pending", key: dbgCode }); q = Array.isArray(d.results) ? d.results : []; }
+    catch (e) { q = REVIEWQ; }
+    if (my !== reviewSeq) return;
+    reviewLoading = false; reviewAt = Date.now();
+    REVIEWQ = q;
+    if (!reviewBusy) renderReview();
+  }
+  function renderTabBadges() {
+    tabsEl.querySelectorAll("button").forEach(b => {
+      const n = dbgUnlocked ? REVIEWQ.filter(r => r && r.level === b.dataset.d).length : 0;
+      b.textContent = DIFF[b.dataset.d].name;
+      b.classList.toggle("attn", n > 0);
+      if (n) {
+        const s = document.createElement("span"); s.className = "badge"; s.textContent = n;
+        b.title = t("rev.tab", { n }); b.append(" ", s);
+      } else b.removeAttribute("title");
+    });
+  }
+  function renderReview() {
+    renderTabBadges();
+    const box = $("top-review-list");
+    const rows = dbgUnlocked ? REVIEWQ.filter(r => r && r.level === topLv) : [];
+    if (!rows.length) { box.hidden = true; box.innerHTML = ""; return; }
+    const df = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const dis = reviewBusy ? " disabled" : "";
+    const bz = (r, act) => reviewBusy && reviewBusy.id === r.id && reviewBusy.act === act ? ' busy" aria-busy="true' : "";
+    box.innerHTML = `<h3>${esc(t("rev.title"))}</h3><p>${esc(t("rev.hint"))}</p><table><tbody>` +
+      rows.map(r => `<tr><td class="who">${esc(r.name || "—")}</td><td class="t">${fmt(total(r))}</td><td>${esc(String(r.errors))}</td><td>${r.at ? df.format(r.at) : ""}</td>` +
+        `<td><div class="acts"><button type="button" class="btn primary${bz(r, "approve")}" data-act="approve" data-id="${esc(r.id)}"${dis}>${esc(t("rev.approve"))}</button>` +
+        `<button type="button" class="btn${bz(r, "reject")}" data-act="reject" data-id="${esc(r.id)}"${dis}>${esc(t(bz(r, "reject") ? "rev.confirm" : "rev.reject"))}</button></div></td></tr>`).join("") +
+      "</tbody></table>";
+    box.hidden = false;
+  }
+  // Během schvalování/zamítání nejde nic zmáčknout ani myší (překryv), ani klávesnicí.
+  window.addEventListener("keydown", e => { if (reviewBusy) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  $("top-review-list").addEventListener("click", async e => {
+    const b = e.target.closest("button[data-act]"); if (!b || !dbgUnlocked || reviewBusy) return;
+    if (b.dataset.act === "reject" && !b.dataset.sure) { b.dataset.sure = "1"; b.textContent = t("rev.confirm"); return; }
+    // Do dokončení akce jsou všechna tlačítka zablokovaná a další kliknutí se ignorují.
+    reviewBusy = { id: b.dataset.id, act: b.dataset.act };
+    $("busy").hidden = false; document.body.setAttribute("aria-busy", "true");
+    $("top-review-list").querySelectorAll("button").forEach(x => x.disabled = true);
+    b.classList.add("busy"); b.setAttribute("aria-busy", "true");
+    try {
+      await remotePost({ action: b.dataset.act, id: b.dataset.id, key: dbgCode });
+      const i = REVIEWQ.findIndex(r => r.id === b.dataset.id); if (i >= 0) REVIEWQ.splice(i, 1); // hned pryč, i kdyby se seznam nepodařilo načíst
+    }
+    catch (err) { setNote(t(String(err.message) === "denied" ? "remote.denied" : "rev.failed")); }
+    try { await loadReview(true); } finally { reviewBusy = null; renderReview(); $("busy").hidden = true; document.body.removeAttribute("aria-busy"); }
+    remoteLoad();
+  });
 
   // ---------- Hra: reset celého žebříčku ----------
   const plural = (n, a, b, c) => n === 1 ? a : n > 1 && n < 5 ? b : c;
@@ -872,14 +984,28 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     }
     return H.map(v => (v >>> 0).toString(16).padStart(8, "0")).join("");
   }
+  const DBG_STORE = "sudoku-dbg";
+  function dbgUnlock(code, atStart) {
+    if (sha256("sudoku-dbg:" + code) !== DBG_HASH) return false;
+    dbgUnlocked = true; dbgCode = code; if (!atStart) setTimeout(loadReview, 0); $("env-dbg").hidden = false;
+    try { localStorage.setItem(DBG_STORE, code); } catch (e) {}
+    $("dbg-key").value = ""; $("dbg-key").hidden = true;
+    $("dbg-panel").disabled = false; $("dbg-panel").hidden = false;
+    return true;
+  }
   $("dbg-key").addEventListener("keydown", e => {
     if (e.key !== "Enter" || dbgUnlocked) return;
     e.preventDefault();
-    if (sha256("sudoku-dbg:" + $("dbg-key").value) !== DBG_HASH) { $("dbg-key").value = ""; return; }
-    dbgUnlocked = true; dbgCode = $("dbg-key").value;
-    $("dbg-key").value = ""; $("dbg-key").hidden = true;
-    $("dbg-panel").disabled = false; $("dbg-panel").hidden = false;
+    if (!dbgUnlock($("dbg-key").value)) $("dbg-key").value = "";
   });
+  $("dbg-lock").addEventListener("click", () => {
+    try { localStorage.removeItem(DBG_STORE); } catch (e) {}
+    dbgUnlocked = false; dbgCode = ""; REVIEWQ = []; reviewSeq++; reviewLoading = false; $("env-dbg").hidden = true;
+    $("dbg-panel").disabled = true; $("dbg-panel").hidden = true; $("dbg-key").hidden = false;
+    renderReview(); render();
+  });
+  // Uložený kód z dřívějška odemkne Debug hned po načtení (neplatný se smaže).
+  try { const c = localStorage.getItem(DBG_STORE); if (c && !dbgUnlock(c, true)) localStorage.removeItem(DBG_STORE); } catch (e) {}
 
   // ---------- Debug: smazání výsledků s hvězdičkou ----------
   function countDebug() {
@@ -964,7 +1090,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     else if (!name && resumeAfterPanel) { resumeAfterPanel = false; setRunning(true); }
   }
   const setSettings = open => setPanel(open ? "settings" : null);
-  function showTop(lv) { topLv = lv; renderTop(); setPanel("top"); remoteLoad(); }
+  function showTop(lv) { topLv = lv; renderTop(); setPanel("top"); remoteLoad(false).then(() => { if (dbgUnlocked && !reviewBusy) loadReview(); }); }
   $("topbtn").addEventListener("click", () => { if ($("top").hidden) showTop(S ? S.level : level); else setPanel(null); });
   $("top-close").addEventListener("click", () => setPanel(null));
   // Nová hra: výběr obtížnosti přes hrací plochu; běžící hru pozastaví, Zpět do hry ji vrátí.
@@ -1256,7 +1382,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     document.querySelectorAll("[data-i18n-title]").forEach(e => { e.title = t(e.dataset.i18nTitle); });
     document.querySelectorAll("[data-i18n-aria]").forEach(e => { e.setAttribute("aria-label", t(e.dataset.i18nAria)); });
     document.querySelectorAll("[data-i18n-placeholder]").forEach(e => { e.placeholder = t(e.dataset.i18nPlaceholder); });
-    document.querySelectorAll("#top-tabs button, #pick button").forEach(b => { const k = b.dataset.d || b.id.replace(/^pk-/, ""); if (DIFF[k]) b.textContent = DIFF[k].name; });
+    document.querySelectorAll("#pick button").forEach(b => { const k = b.id.replace(/^pk-/, ""); if (DIFF[k]) b.textContent = DIFF[k].name; });
+    renderTabBadges();
     padBtns.forEach((b, k) => b.setAttribute("aria-label", t("pad.enter", { v: k + 1 })));
     er.setAttribute("aria-label", t("pad.erase"));
     $("learn-out").textContent = OPT.learnDelay + " s";
@@ -1282,7 +1409,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (data && data.panel) { lastId = data.lastId || null; if (data.panel === "top") showTop(data.topLv || S.level); else setPanel("settings"); resumeAfterPanel = !!data.resume && !S.done; }
   }
   applyLang(); $("s-lang").value = OPT.lang;
-  if (SCORES_URL) flushPending().then(remoteLoad);
+  if (SCORES_URL) {
+    remoteLoad().then(() => { if (dbgUnlocked) loadReview(); }); // schvalování má nižší prioritu
+    flushPending().then(sent => { if (sent) remoteLoad(); });
+  }
   fitHeader();
   window.claude?.hot?.snapshot?.(() => ({ S, level, sel, running, panel: !$("top").hidden ? "top" : !$("settings").hidden ? "settings" : null, topLv, lastId, resume: resumeAfterPanel }));
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});

@@ -499,7 +499,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   }
   function setRunning(r) { running = r && !S.done; render(); save(); if (running && sel >= 0) cells[sel].focus(); }
   const OPT = { peers: false, same: false, autonotes: false, warn: false, dup: false, lock: false, count: false, sound: true, volume: 5, learn: false, learnDelay: 5, pen: true, erase: true, unit: true, debug: false, lang: "cs" };
-  let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (kód se pamatuje v tomto prohlížeči, dokud se Debug nezamkne).
+  let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (kód se pamatuje v tomto prohlížeči, dokud se Debug neodhlásí).
   const solvedDigit = v => S.val.reduce((n, x, i) => n + (x === v && S.sol[i] === v), 0) === 9;
   try { Object.assign(OPT, JSON.parse(localStorage.getItem("sudoku-test-settings")) || {}); } catch (e) {}
   const saveOpt = () => { try { localStorage.setItem("sudoku-test-settings", JSON.stringify(OPT)); } catch (e) {} };
