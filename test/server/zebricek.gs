@@ -34,24 +34,36 @@ function int_(v, max) {
   return isFinite(n) && n >= 0 && n <= max ? n : null;
 }
 
-// Čtení: všechny výsledky daného listu.
-function doGet(e) {
-  const sh = sheet_(e && e.parameter && e.parameter.sheet);
-  // výsledky čekající na ověření se nezobrazují (schválení = ve sloupci validace napsat OK nebo text smazat)
-  const results = rows_(sh).filter(r => r[0] !== "" && (String(r[8]).trim() === "" || String(r[8]).trim().toUpperCase() === "OK")).map(r => ({
+// Schválený = ve sloupci validace nic nebo OK.
+function approved_(v) { const s = String(v).trim().toUpperCase(); return s === "" || s === "OK"; }
+function row_(r) {
+  return {
     id: String(r[0]), level: String(r[1]), name: String(r[2]).replace(/^'/, ""),
     secs: Number(r[3]) || 0, errors: Number(r[4]) || 0, hints: Number(r[5]) || 0,
     at: Number(r[6]) || 0, debug: r[7] === true || String(r[7]).toUpperCase() === "TRUE"
-  }));
+  };
+}
+
+// Čtení: všechny schválené výsledky daného listu (čekající na ověření se nezobrazují).
+function doGet(e) {
+  const sh = sheet_(e && e.parameter && e.parameter.sheet);
+  const results = rows_(sh).filter(r => r[0] !== "" && approved_(r[8])).map(row_);
   return json_({ ok: true, results: results });
 }
 
 // Zápis: přidání výsledku, nebo smazání (jen s ADMIN_KEY).
 function doPost(e) {
+  let d;
+  try { d = JSON.parse((e && e.postData && e.postData.contents) || "{}"); } catch (err) { return json_({ ok: false, error: "json" }); }
+  // Seznam čekajících jen čte – bez zámku, aby nečekal ve frontě za zápisy.
+  if (d.action === "pending") {
+    const key = PropertiesService.getScriptProperties().getProperty("ADMIN_KEY");
+    if (!key || String(d.key || "") !== key) return json_({ ok: false, error: "denied" });
+    return json_({ ok: true, results: rows_(sheet_(d.sheet)).filter(r => r[0] !== "" && !approved_(r[8])).map(row_) });
+  }
   const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(10000)) return json_({ ok: false, error: "busy" });
   try {
-    const d = JSON.parse((e && e.postData && e.postData.contents) || "{}");
     const sh = sheet_(d.sheet);
 
     if (d.action === "add") {
@@ -70,6 +82,18 @@ function doPost(e) {
       const review = !x.debug && secs < MIN_SECS_PER_CELL * EMPTY[x.level];
       sh.appendRow([id, x.level, name, secs, errors, hints, at, !!x.debug, review ? REVIEW : ""]);
       return json_({ ok: true, review: review });
+    }
+
+    // Schvalování z aplikace (jen s ADMIN_KEY): seznam čekajících, schválení, zamítnutí.
+    if (d.action === "approve" || d.action === "reject") {
+      const key = PropertiesService.getScriptProperties().getProperty("ADMIN_KEY");
+      if (!key || String(d.key || "") !== key) return json_({ ok: false, error: "denied" });
+      const data = rows_(sh);
+      const i = data.findIndex(r => String(r[0]) === String(d.id || ""));
+      if (i < 0) return json_({ ok: false, error: "notfound" });
+      if (d.action === "approve") sh.getRange(i + 2, HEADER.length).setValue("OK");
+      else sh.deleteRow(i + 2);
+      return json_({ ok: true });
     }
 
     if (d.action === "reset" || d.action === "resetDebug") {
