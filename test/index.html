@@ -403,13 +403,15 @@ html, body { max-width: 100%; overflow-x: hidden; }
     </div>
   </div>
 </div>
-<script src="lang/cs.js"></script>
-<script src="lang/en.js"></script>
-<script src="lang/sk.js"></script>
-<script src="config.js"></script>
+<script src="lang/cs.js?v=20261022b"></script>
+<script src="lang/en.js?v=20261022b"></script>
+<script src="lang/sk.js?v=20261022b"></script>
+<script src="config.js?v=20261022b"></script>
 <script>
 (() => {
   // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro uložení stránky i se žebříčkem).
+  // Verze aplikace: při každé změně (i jen jazykových souborů) zvýšit zde i v ?v= u <script src> výše. Podle ní hra pozná novou verzi.
+  const APP_VER = "20261022b";
   const MAIN_SCRIPT = document.currentScript;
   const PRISTINE = [...document.body.children].filter(n =>
     ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
@@ -874,9 +876,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
     const rank = boardList(S.pending.level).concat(S.pending).sort(byRank).findIndex(r => r.id === S.pending.id) + 1;
     $("name-label").textContent = t("name.congrats", { r: rank, d: DIFF[S.pending.level].name, t: fmt(total(S.pending)), p: S.pending.errors ? t("name.penalty") : "" });
     $("name-err").textContent = "";
+    // Předvyplní poslední použité jméno (z tohoto prohlížeče, případně z posledního vlastního výsledku) a označí ho, aby šlo hned přepsat.
     let last = ""; try { last = localStorage.getItem("sudoku-test-name") || ""; } catch (e) {}
+    if (!last) { const mine = Object.values(TOP).flat().concat(PENDING).filter(r => r && r.name && r.at).sort((a, b) => b.at - a.at)[0]; if (mine) last = mine.name; }
     if (!$("name-input").value) $("name-input").value = last;
-    setTimeout(() => $("name-input").focus(), 60);
+    setTimeout(() => { $("name-input").focus(); $("name-input").select(); }, 60);
   }
   async function submitName(e) {
     e.preventDefault();
@@ -1482,11 +1486,13 @@ html, body { max-width: 100%; overflow-x: hidden; }
     document.documentElement.lang = OPT.lang;
     for (const k in DIFF) DIFF[k].name = t("diff." + k);
     if (!Object.keys(LANGS).length) return; // jazykové soubory se nenačetly: zůstane výchozí čeština z HTML
-    document.querySelectorAll("[data-i18n]").forEach(e => { e.textContent = t(e.dataset.i18n); });
-    document.querySelectorAll("[data-i18n-html]").forEach(e => { e.innerHTML = t(e.dataset.i18nHtml); });
-    document.querySelectorAll("[data-i18n-title]").forEach(e => { e.title = t(e.dataset.i18nTitle); });
-    document.querySelectorAll("[data-i18n-aria]").forEach(e => { e.setAttribute("aria-label", t(e.dataset.i18nAria)); });
-    document.querySelectorAll("[data-i18n-placeholder]").forEach(e => { e.placeholder = t(e.dataset.i18nPlaceholder); });
+    // Chybí-li překlad (např. starší jazykový soubor v mezipaměti), zůstane výchozí text ze stránky, ne název klíče.
+    const tr = (k, fn) => { const v = t(k); if (v !== k) fn(v); };
+    document.querySelectorAll("[data-i18n]").forEach(e => tr(e.dataset.i18n, v => { e.textContent = v; }));
+    document.querySelectorAll("[data-i18n-html]").forEach(e => tr(e.dataset.i18nHtml, v => { e.innerHTML = v; }));
+    document.querySelectorAll("[data-i18n-title]").forEach(e => tr(e.dataset.i18nTitle, v => { e.title = v; }));
+    document.querySelectorAll("[data-i18n-aria]").forEach(e => tr(e.dataset.i18nAria, v => { e.setAttribute("aria-label", v); }));
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(e => tr(e.dataset.i18nPlaceholder, v => { e.placeholder = v; }));
     document.querySelectorAll("#pick button").forEach(b => { const k = b.id.replace(/^pk-/, ""); if (DIFF[k]) b.textContent = DIFF[k].name; });
     renderTabBadges();
     padBtns.forEach((b, k) => b.setAttribute("aria-label", t("pad.enter", { v: k + 1 })));
