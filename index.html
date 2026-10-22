@@ -460,7 +460,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     $("name-form").hidden = !(resultOpen && S.pending);
     $("res-new").hidden = !(resultOpen && !S.pending);
     $("go").hidden = picking || resultOpen;
-    $("pick").hidden = !picking; $("pick-cancel").hidden = !picking;
+    $("pick").hidden = !picking; $("pick-cancel").hidden = !picking || firstPick;
     $("pick-cancel").textContent = S.done ? t("pick.backResult") : t("pick.backGame");
     $("pick").querySelectorAll("button").forEach(b => b.classList.toggle("primary", b.id === "pk-" + S.level));
     $("go").textContent = fresh ? t("cover.go") : t("btn.resume");
@@ -961,13 +961,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   $("top-close").addEventListener("click", () => setPanel(null));
   // Nová hra: výběr obtížnosti přes hrací plochu; běžící hru pozastaví, Zpět do hry ji vrátí.
   let pickResume = false;
+  let firstPick = false; // první spuštění: hra čeká na výběr obtížnosti, není kam se vracet
   function openPicker() {
     resumeAfterPanel = false; setPanel(null);
     pickResume = !!(running && !S.done);
     if (running) running = false;
     resultOpen = false; picking = true; render(); save();
   }
-  $("newgame").addEventListener("click", () => { if (picking) { $("pick-cancel").click(); } else openPicker(); });
+  $("newgame").addEventListener("click", () => { if (picking) { if (!firstPick) $("pick-cancel").click(); } else openPicker(); });
   $("notes").addEventListener("click", () => { notesMode = !notesMode; render(); });
   $("go").addEventListener("click", () => setRunning(true));
   function pauseButton() {
@@ -985,7 +986,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   for (const [k, d] of Object.entries(DIFF)) {
     const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.id = "pk-" + k; b.textContent = d.name;
     b.addEventListener("click", () => {
-      picking = false; level = k; $("pick").hidden = true;
+      picking = false; firstPick = false; level = k; $("pick").hidden = true;
       $("cover-title").textContent = t("cover.generating"); $("cover-text").textContent = "";
       setTimeout(() => { newGame(k); setRunning(true); }, 20);
     });
@@ -1268,7 +1269,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   function start(data) {
     if (data && data.S) { S = data.S; level = data.level; sel = data.sel ?? -1; running = !!data.running; render(); startTimer(); if (S.done) { boardEl.classList.add("finished"); } }
     else if (load()) { sel = S.done ? -1 : S.val.indexOf(0); if (S.done) boardEl.classList.add("finished"); render(); startTimer(); if (S.done) setStatus(t("msg.finished"), "win"); }
-    else newGame("medium");
+    else { newGame("medium"); firstPick = true; picking = true; render(); } // první spuštění: nejdřív výběr obtížnosti
     if (S && S.done && S.pending) { resultOpen = true; render(); showNameForm(); }
     if (data && data.panel) { lastId = data.lastId || null; if (data.panel === "top") showTop(data.topLv || S.level); else setPanel("settings"); resumeAfterPanel = !!data.resume && !S.done; }
   }
