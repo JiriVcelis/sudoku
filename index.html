@@ -1069,7 +1069,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
     if (running) running = false;
     resultOpen = false; picking = true; render(); save();
   }
-  $("newgame").addEventListener("click", () => { if (picking) { if (!firstPick) $("pick-cancel").click(); } else openPicker(); });
+  $("newgame").addEventListener("click", () => {
+    // Z otevřeného Žebříčku nebo Nastavení vždy zpět na výběr obtížnosti (i když už byl výběr otevřený).
+    if (!$("settings").hidden || !$("top").hidden) { if (picking) setPanel(null); else openPicker(); return; }
+    if (picking) { if (!firstPick) $("pick-cancel").click(); } else openPicker();
+  });
   $("notes").addEventListener("click", () => { notesMode = !notesMode; render(); });
   $("go").addEventListener("click", () => setRunning(true));
   function pauseButton() {
