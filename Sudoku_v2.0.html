@@ -1,0 +1,1128 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sudoku</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=Instrument+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<style>
+/* Layout: one column — header, then board + control panel side by side (stacked on phones) */
+:root {
+  --bg: #eef1f0;
+  --paper: #fbfcfb;
+  --ink: #18212b;
+  --muted: #5d6873;
+  --line: #c9d0d2;
+  --line-strong: #18212b;
+  --accent: #2c56c9;
+  --accent-soft: #dfe7fb;
+  --peer: #eef2f5;
+  --same: #d3ddf6;
+  --bad: #c2362f;
+  --bad-soft: #f8dedb;
+  --good: #23784a;
+  --learn: #c98200;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-digit: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12171d; --paper: #1a2129; --ink: #e4e9ee; --muted: #93a0ac; --line: #313b46; --line-strong: #c3ccd5;
+  --accent: #86a6ff; --accent-soft: #24304a; --peer: #212a34; --same: #2d3b5c; --bad: #ff8a80; --bad-soft: #43262a; --good: #6fd39b; --learn: #f2b442;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12171d; --paper: #1a2129; --ink: #e4e9ee; --muted: #93a0ac; --line: #313b46; --line-strong: #c3ccd5;
+  --accent: #86a6ff; --accent-soft: #24304a; --peer: #212a34; --same: #2d3b5c; --bad: #ff8a80; --bad-soft: #43262a; --good: #6fd39b; --learn: #f2b442;
+  color-scheme: dark }
+
+/* Rezervované místo pro posuvník: stránka neposkakuje, když se změní její výška (Nastavení, Žebříček). */
+html { scrollbar-gutter: stable; overflow-y: scroll; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 40px; }
+.wrap { max-width: 920px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: grid; gap: 14px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2rem, 5vw, 2.8rem); letter-spacing: -0.02em; margin: 0; line-height: 1; }
+h1 span { color: var(--accent); }
+.meta { display: flex; gap: 18px; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.meta b { color: var(--ink); font-weight: 600; font-family: var(--f-digit); }
+/* Pevné šířky hodnot, aby se hlavička neposouvala při změně obtížnosti nebo počtu chyb. */
+#m-diff { display: inline-block; min-width: 11ch; }
+#m-err { display: inline-block; min-width: 2ch; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 28px; align-items: start; }
+@media (max-width: 720px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.board { width: 100%; max-width: 560px; aspect-ratio: 1; display: grid; grid-template-columns: repeat(9, 1fr);
+  background: var(--paper); border: 2.5px solid var(--line-strong); border-radius: 4px; user-select: none; touch-action: manipulation; }
+.cell { position: relative; display: grid; place-items: center; border: 0; padding: 0; margin: 0; background: transparent;
+  border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); font-family: var(--f-digit);
+  font-size: clamp(1.1rem, 4.6vw, 1.75rem); color: var(--accent); cursor: pointer; min-width: 0; }
+.cell:nth-child(9n) { border-right: 0; }
+.cell:nth-child(n+73) { border-bottom: 0; }
+.cell.br { border-right: 2px solid var(--line-strong); }
+.cell.bb { border-bottom: 2px solid var(--line-strong); }
+.cell.given { color: var(--ink); font-weight: 600; }
+.cell.peer { background: var(--peer); }
+.cell.same { background: var(--same); }
+.cell.sel { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.cell.err { color: var(--bad); background: var(--bad-soft); }
+.cell.dup { background: var(--bad-soft); }
+.cell.sel.err { box-shadow: inset 0 0 0 2px var(--bad); }
+.cell:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.notes { position: absolute; inset: 6%; display: grid; grid-template-columns: repeat(3, 1fr); font-size: clamp(0.45rem, 1.6vw, 0.66rem); color: var(--muted); font-weight: 400; }
+.notes i { font-style: normal; display: grid; place-items: center; line-height: 1; }
+.board.solved .cell { animation: pop .8s ease var(--d, 0ms) both; }
+@keyframes pop { 35% { background: var(--accent); color: var(--paper); transform: scale(1.1); } 100% { transform: none; } }
+.board.finished { filter: grayscale(0.9); opacity: 0.5; transition: filter 1.2s ease 1.6s, opacity 1.2s ease 1.6s; }
+.board.finished .cell { cursor: default; }
+.pick { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: min(100%, 420px); }
+.pick .btn { padding: 11px 16px; font-size: 0.95rem; white-space: nowrap; flex: 0 1 auto; }
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
+.panel { display: grid; gap: 18px; }
+.group { display: grid; gap: 8px; }
+.label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.seg { display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--paper); }
+.seg button { border: 0; background: transparent; color: var(--ink); font: 500 0.9rem var(--f-body); padding: 9px 12px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px; text-align: left; }
+.seg button span { font: 400 0.75rem var(--f-digit); color: var(--muted); }
+.seg button[aria-pressed="true"] span { color: inherit; opacity: 0.75; }
+.seg button + button { border-top: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.btn { font: 600 0.92rem var(--f-body); padding: 11px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.pad button { aspect-ratio: 1; max-width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink);
+  font: 600 1.25rem var(--f-digit); cursor: pointer; display: grid; place-items: center; position: relative; }
+.pad button:hover { border-color: var(--accent); color: var(--accent); }
+.pad button.done { opacity: 0.3; cursor: not-allowed; }
+.pad button.done:hover { border-color: var(--line); color: var(--ink); }
+.pad button small { position: absolute; bottom: 2px; right: 4px; font-size: 0.55rem; color: var(--muted); font-weight: 400; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { min-height: 1.4em; font-size: 0.92rem; color: var(--muted); }
+.status.win { color: var(--good); font-weight: 600; }
+.status.warn { color: var(--bad); }
+.status.learn { color: var(--ink); border-left: 3px solid var(--learn); padding-left: 10px; }
+.cell.learn { box-shadow: inset 0 0 0 3px var(--learn); animation: learnPulse 1.4s ease-in-out infinite; }
+@keyframes learnPulse { 50% { box-shadow: inset 0 0 0 5px var(--learn); } }
+.learn-badge { color: var(--learn); font-weight: 600; white-space: nowrap; }
+/* Odznaky drží své místo i když nesvítí, aby hlavička neposkakovala. */
+.learn-badge.off { visibility: hidden; }
+.ghost { color: var(--muted); opacity: 0.5; font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { .cell.learn { animation: none; } }
+.hint-keys { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.hint-keys kbd { font-family: var(--f-digit); font-size: 0.72rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--paper); }
+.board-wrap { position: relative; width: 100%; max-width: 560px; }
+.board.covered .cell { visibility: hidden; }
+.cover { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 14px; text-align: center;
+  background: var(--paper); border: 2.5px solid var(--line-strong); border-radius: 4px; padding: 16px; }
+.cover h2 { margin: 0; font: 700 clamp(1.5rem, 5vw, 2.2rem) var(--f-display); letter-spacing: -0.02em; }
+.cover p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.cover .btn { padding: 13px 34px; font-size: 1.05rem; }
+.hdr-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.gear { font: 600 0.85rem var(--f-body); padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+#pause { min-width: 8em; text-align: center; }
+.gear.gear-start { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.gear[aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.settings { display: grid; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.settings h2 { margin: 0; font: 700 1.05rem var(--f-display); }
+.settings fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
+.settings legend { padding: 0; margin-bottom: 8px; }
+#settings-close, #top-close { justify-self: start; }
+.opt { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; line-height: 1.35; }
+.opt input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--accent); flex: none; cursor: pointer; }
+.vol { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) 4ch; align-items: center; gap: 12px; padding-left: 28px; max-width: 420px; }
+.vol label { font-size: 0.9rem; }
+.vol input { width: 100%; accent-color: var(--accent); }
+.vol output { font-family: var(--f-digit); font-variant-numeric: tabular-nums; text-align: left; white-space: nowrap; }
+.vol.off { opacity: 0.45; }
+.opt.sub { padding-left: 28px; }
+.opt.off { opacity: 0.45; cursor: default; }
+.opt small { display: block; color: var(--muted); font-size: 0.8rem; }
+.gear#topbtn[aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button { font: 500 0.85rem var(--f-body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.tbl { overflow-x: auto; }
+.tbl table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.tbl th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.tbl td { padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td.t { font-family: var(--f-digit); font-weight: 600; }
+.tbl td.t.pen { color: var(--bad); }
+.tbl td.t small { display: block; font: 400 0.7rem var(--f-body); color: var(--muted); }
+.tbl .legend { margin: 8px 0 0; font-size: 0.8rem; color: var(--muted); }
+.tbl .legend b { color: var(--bad); font-weight: 600; }
+.dbg { color: var(--learn); font-weight: 700; }
+.dbg-reset { display: grid; gap: 8px; justify-items: start; padding-left: 28px; max-width: 460px; }
+.dbg-reset .confirm { justify-self: stretch; }
+.dbg-msg { font-size: 0.85rem; color: var(--muted); }
+.dbg-msg:empty { display: none; }
+.tbl td.r { color: var(--muted); font-family: var(--f-digit); width: 2.5em; }
+.tbl tr.new td { background: var(--accent-soft); animation: rowFlash 1.2s ease 3; }
+@keyframes rowFlash { 50% { background: var(--accent); color: var(--paper); } }
+@media (prefers-reduced-motion: reduce) { .tbl tr.new td { animation: none; } }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td.who { max-width: 14em; overflow: hidden; text-overflow: ellipsis; }
+.name-form { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft); font-size: 0.92rem; }
+.cover .name-form { width: min(100%, 440px); text-align: left; }
+.name-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.name-row input { flex: 1 1 180px; min-width: 0; font: 500 1rem var(--f-body); padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.name-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.name-row .btn { padding: 9px 14px; }
+.name-err { color: var(--bad); font-size: 0.85rem; min-height: 0; }
+.name-err:empty { display: none; }
+.top-note { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.tbl .empty { color: var(--muted); font-size: 0.9rem; padding: 6px 0; }
+.confirm { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft); font-size: 0.88rem; }
+.confirm div { display: flex; gap: 8px; }
+.confirm .btn { padding: 7px 12px; flex: 1; }
+@media (max-width: 720px) { .hint-keys { display: none; } .board { margin: 0 auto; } }
+@media (prefers-reduced-motion: reduce) { .board.solved .cell { animation: none; } }
+</style>
+<div class="wrap">
+  <header>
+    <h1>Sudoku<span>.</span></h1>
+    <div class="hdr-right">
+    <button type="button" class="gear" id="pause">Pauza</button>
+    <button type="button" class="gear" id="share">Sdílej</button>
+    <div class="meta">
+      <span>Obtížnost <b id="m-diff">Střední</b></span>
+      <span>Čas <b id="m-time">00:00</b></span>
+      <span>Chyby <b id="m-err">0</b></span>
+      <span class="learn-badge off" id="m-learn" title="Hra s režimem Učení se nezapisuje do žebříčku">Učení</span>
+      <span class="learn-badge off" id="m-debug" title="Debug mód: výsledek se zapíše s hvězdičkou">Debug *</span>
+    </div>
+    <button type="button" class="gear" id="topbtn" aria-expanded="false" aria-controls="top">Žebříček</button>
+    <button type="button" class="gear" id="gear" aria-expanded="false" aria-controls="settings">Nastavení</button>
+    </div>
+  </header>
+
+  <section class="settings" id="settings" hidden="" aria-label="Nastavení">
+    <h2>Nastavení</h2>
+    <fieldset>
+      <legend class="label">Zvuky</legend>
+      <label class="opt"><input type="checkbox" id="s-sound"><span>Zapnout zvuky<small>Po vyřešení sudoku zahraje vítěznou melodii.</small></span></label>
+      <div class="vol" id="vol-row">
+        <label for="s-volume">Hlasitost</label>
+        <input type="range" id="s-volume" min="1" max="10" step="1">
+        <output id="vol-out" for="s-volume">6</output>
+      </div>
+      <label class="opt sub" id="pen-row"><input type="checkbox" id="s-pen"><span>Zvuk zápisu<small>Při zapsání čísla nebo poznámky zazní krátký jemný tón. Každá číslice má svůj.</small></span></label>
+      <label class="opt sub" id="erase-row"><input type="checkbox" id="s-erase"><span>Zvuk mazání<small>Při smazání čísla nebo poznámek zazní krátký klesající tón.</small></span></label>
+      <label class="opt sub" id="unit-row"><input type="checkbox" id="s-unit"><span>Zvuk dokončení řádku, sloupce a čtverce<small>Když doplníš celý řádek, sloupec nebo čtverec, zazní krátká zvonivá melodie. S vypnutým upozorněním na špatné číslo zazní i při chybě, aby zvuk nic neprozradil. Při více najednou je bohatší.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend class="label">Nápověda</legend>
+      <label class="opt"><input type="checkbox" id="s-learn"><span>Učení<small>Po nastavené době bez akce zvýrazní pole a zašedle v něm ukáže číslo, které tam patří. Hra, ve které je Učení zapnuté, se nezapisuje do žebříčku.</small></span></label>
+      <div class="vol" id="learn-row">
+        <label for="s-learn-delay">Nápověda po</label>
+        <input type="range" id="s-learn-delay" min="1" max="15" step="1">
+        <output id="learn-out" for="s-learn-delay">5 s</output>
+      </div>
+      <label class="opt"><input type="checkbox" id="s-peers"><span>Zvýrazňovat řádky a sloupce<small>Podbarví řádek, sloupec a čtverec vybraného pole.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-same"><span>Zvýrazňovat stejné číslice<small>Po kliknutí na pole s číslem podbarví všechna stejná čísla na ploše.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-autonotes"><span>Automaticky odstraňovat poznámky<small>Po zapsání čísla ho smaže z poznámek ve stejném řádku, sloupci a čtverci.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-warn"><span>Upozornit na špatně zadané číslo<small>Číslo, které nepatří do řešení, se hned označí červeně a zobrazí se upozornění.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-dup"><span>Upozornit na duplicitní číslo<small>Označí čísla, která se opakují ve stejném řádku, sloupci nebo čtverci.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-count"><span>Ukazovat, kolik čísel zbývá<small>Na číselné klávesnici zobrazí u každé číslice, kolikrát ještě chybí na ploše.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-lock"><span>Zamykat vyčerpaná čísla<small>Když je číslice správně doplněná na všech devíti místech, deaktivuje se a nedá se dál zapsat ani přidat do poznámek.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend class="label">Hra</legend>
+      <div class="dbg-reset" style="padding-left:0">
+        <button type="button" class="btn" id="all-reset">Resetovat žebříček</button>
+        <div class="confirm" id="all-confirm" hidden="">
+          <span id="all-question">Smazat celý žebříček?</span>
+          <div><button type="button" class="btn primary" id="all-yes">Ano, smazat vše</button><button type="button" class="btn" id="all-no">Zrušit</button></div>
+        </div>
+        <span class="dbg-msg" id="all-msg" aria-live="polite"></span>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend class="label">Debug</legend>
+      <label class="opt"><input type="checkbox" id="s-debug"><span>Vyplnit sudoku<small>Při nové hře vyplní celé sudoku kromě posledního pole. Výsledek se zapíše do žebříčku s hvězdičkou.</small></span></label>
+      <div class="dbg-reset">
+        <button type="button" class="btn" id="dbg-reset">Smazat debug výsledky ze žebříčku</button>
+        <div class="confirm" id="dbg-confirm" hidden="">
+          <span id="dbg-question">Smazat všechny výsledky označené hvězdičkou?</span>
+          <div><button type="button" class="btn primary" id="dbg-yes">Ano, smazat</button><button type="button" class="btn" id="dbg-no">Zrušit</button></div>
+        </div>
+        <span class="dbg-msg" id="dbg-msg" aria-live="polite"></span>
+      </div>
+    </fieldset>
+    <button type="button" class="btn primary" id="settings-close">Zavřít nastavení</button>
+  </section>
+
+  <section class="settings" id="top" hidden="" aria-label="Žebříček">
+    <h2>Žebříček</h2>
+    <div class="tabs" id="top-tabs" role="tablist"></div>
+    <div class="tbl" id="top-body"></div>
+    <p class="top-note" id="top-note">Žebříček se ukládá přímo do souboru hry. Sdílej stáhne stejný soubor, jaký dostaneš stažením stránky.</p>
+    <button type="button" class="btn primary" id="top-close">Zavřít žebříček</button>
+  </section>
+
+  <div class="main" id="main">
+    <div class="board-wrap">
+      <div class="board" id="board" role="grid" aria-label="Hrací plocha sudoku"></div>
+      <div class="cover" id="cover" hidden="">
+        <h2 id="cover-title">Připraveno</h2>
+        <p id="cover-text"></p>
+        <button type="button" class="btn primary" id="go">Začít</button>
+        <div class="pick" id="pick" hidden=""></div>
+        <form class="name-form" id="name-form" hidden="">
+          <label for="name-input" id="name-label">Napiš jméno, pod kterým se zapíšeš.</label>
+          <div class="name-row">
+            <input type="text" id="name-input" maxlength="30" autocomplete="off" placeholder="Tvoje jméno">
+            <button type="submit" class="btn primary" id="name-save">Zapsat</button>
+            <button type="button" class="btn" id="name-skip">Nezapisovat</button>
+          </div>
+          <span class="name-err" id="name-err" aria-live="polite"></span>
+        </form>
+        <button type="button" class="btn primary" id="res-new" hidden="">Nová hra</button>
+        <button type="button" class="btn" id="pick-cancel" hidden="">Zpět na výsledek</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="group">
+        <span class="label">Obtížnost</span>
+        <div class="seg" id="diff">
+          <button type="button" id="d-novice" data-d="novice">Začátečník <span>60 čísel</span></button>
+          <button type="button" id="d-beginner" data-d="beginner">Velmi lehká <span>54 čísel</span></button>
+          <button type="button" id="d-easy" data-d="easy">Lehká <span>48 čísel</span></button>
+          <button type="button" id="d-medium" data-d="medium">Střední <span>40 čísel</span></button>
+          <button type="button" id="d-hard" data-d="hard">Těžká <span>32 čísel</span></button>
+          <button type="button" id="d-expert" data-d="expert">Expert <span>25 čísel</span></button>
+        </div>
+        <button type="button" class="btn primary" id="new">Nová hra</button>
+        <div class="confirm" id="confirm" hidden="">
+          Rozehraná hra se ztratí. Začít novou?
+          <div><button type="button" class="btn primary" id="c-yes">Ano, nová hra</button><button type="button" class="btn" id="c-no">Zpět</button></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <span class="label">Číslo</span>
+        <div class="pad" id="pad"></div>
+      </div>
+
+      <div class="group">
+        <span class="label">Nástroje</span>
+        <div class="tools">
+          <button type="button" class="btn" id="notes" aria-pressed="false">Poznámky</button>
+          <button type="button" class="btn" id="undo">Zpět</button>
+          <button type="button" class="btn" id="hint">Nápověda</button>
+          <button type="button" class="btn" id="check">Zkontrolovat</button>
+        </div>
+      </div>
+
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="hint-keys"><kbd>1</kbd>–<kbd>9</kbd> zapsat · <kbd>Del</kbd> smazat · šipky pohyb · <kbd>N</kbd> poznámky · <kbd>P</kbd> pauza · <kbd>Ctrl</kbd>+<kbd>Z</kbd> zpět</div>
+    </div>
+  </div>
+</div>
+<script id="sudoku-embed">window.SUDOKU_EMBED = {"savedAt":1792652055951,"results":{"novice":[{"id":"1792502879782-xb28","name":"Jirka","secs":80,"errors":0,"hints":0,"at":1792502879782,"debug":false},{"id":"1792501375769-x5jw","name":"Jirka","secs":94,"errors":0,"hints":0,"at":1792501375769,"debug":false},{"id":"1792503701448-mgnl","name":"Jirka","secs":115,"errors":1,"hints":0,"at":1792503701448,"debug":false}],"easy":[{"id":"1792500647934-ilem","name":"Jirka","secs":337,"errors":7,"hints":0,"at":1792500647934,"debug":false}]}};</script>
+<script>
+(() => {
+  // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro tlačítko Sdílej).
+  const MAIN_SCRIPT = document.currentScript;
+  const PRISTINE = [...document.body.children].filter(n =>
+    ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
+  ).map(n => n.outerHTML);
+  const EMBED = (window.SUDOKU_EMBED && typeof window.SUDOKU_EMBED === "object" && window.SUDOKU_EMBED.results) || {};
+  const EMBED_REV = String((window.SUDOKU_EMBED && window.SUDOKU_EMBED.savedAt) || 0);
+  const DIFF = { novice: { name: "Začátečník", clues: 60, tries: 1 }, beginner: { name: "Velmi lehká", clues: 54, tries: 1 },
+    easy: { name: "Lehká", clues: 48, tries: 1 }, medium: { name: "Střední", clues: 40, tries: 1 },
+    hard: { name: "Těžká", clues: 32, tries: 1 }, expert: { name: "Expert", clues: 25, tries: 2 } };
+  // Převod uložených výsledků a rozehrané hry ze staršího rozdělení obtížností
+  try {
+    if (localStorage.getItem("sudoku-ver") !== "2") {
+      const MAP = { beginner: "easy", easy: "medium", medium: "hard", hard: "expert", expert: "expert" };
+      const old = JSON.parse(localStorage.getItem("sudoku-top") || "{}"), neu = {};
+      for (const [k, list] of Object.entries(old)) { const n = MAP[k]; if (n) neu[n] = (neu[n] || []).concat(list); }
+      for (const k in neu) neu[k] = neu[k].sort((a, b) => a.secs - b.secs || a.errors - b.errors || a.hints - b.hints || a.at - b.at).slice(0, 10);
+      localStorage.setItem("sudoku-top", JSON.stringify(neu));
+      const g = JSON.parse(localStorage.getItem("sudoku-game") || "null");
+      if (g && g.S && MAP[g.S.level]) { g.S.level = MAP[g.S.level]; g.level = MAP[g.level] || g.S.level; localStorage.setItem("sudoku-game", JSON.stringify(g)); }
+      localStorage.setItem("sudoku-ver", "2");
+    }
+  } catch (e) {}
+  const $ = id => document.getElementById(id);
+  const boardEl = $("board"), padEl = $("pad"), statusEl = $("status");
+  const peers = [];
+  for (let i = 0; i < 81; i++) {
+    const r = (i / 9) | 0, c = i % 9, s = new Set();
+    for (let k = 0; k < 9; k++) { s.add(r * 9 + k); s.add(k * 9 + c); }
+    const br = r - r % 3, bc = c - c % 3;
+    for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) s.add((br + a) * 9 + bc + b);
+    s.delete(i); peers.push([...s]);
+  }
+
+  // ---------- generator ----------
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function candidates(g, i) {
+    let used = 0;
+    for (const p of peers[i]) if (g[p]) used |= 1 << g[p];
+    const out = [];
+    for (let v = 1; v <= 9; v++) if (!(used & (1 << v))) out.push(v);
+    return out;
+  }
+  function fill(g) {
+    let best = -1, bestC = null;
+    for (let i = 0; i < 81; i++) if (!g[i]) {
+      const c = candidates(g, i);
+      if (!bestC || c.length < bestC.length) { best = i; bestC = c; if (c.length < 2) break; }
+    }
+    if (best < 0) return true;
+    for (const v of shuffle(bestC)) { g[best] = v; if (fill(g)) return true; }
+    g[best] = 0; return false;
+  }
+  function countSolutions(g, limit = 2) {
+    let best = -1, bestC = null;
+    for (let i = 0; i < 81; i++) if (!g[i]) {
+      const c = candidates(g, i);
+      if (!bestC || c.length < bestC.length) { best = i; bestC = c; if (c.length < 2) break; }
+    }
+    if (best < 0) return 1;
+    let n = 0;
+    for (const v of bestC) { g[best] = v; n += countSolutions(g, limit - n); if (n >= limit) break; }
+    g[best] = 0; return n;
+  }
+  function generate(level) {
+    let best = null;
+    for (let t = 0; t < DIFF[level].tries; t++) {
+      const g = generateOnce(level);
+      if (!best || g.clues < best.clues) best = g;
+      if (best.clues <= DIFF[level].clues) break;
+    }
+    return best;
+  }
+  function generateOnce(level) {
+    const sol = new Array(81).fill(0); fill(sol);
+    const puz = sol.slice(); let clues = 81;
+    const target = DIFF[level].clues;
+    for (const i of shuffle([...Array(81).keys()])) {
+      if (clues <= target) break;
+      const keep = puz[i]; puz[i] = 0;
+      if (countSolutions(puz.slice()) !== 1) puz[i] = keep; else clues--;
+    }
+    return { sol, puz, clues };
+  }
+
+  // ---------- state ----------
+  let S, sel = -1, notesMode = false, level = "medium", timer = null, running = false, picking = false, resultOpen = false;
+  function syncRun() {
+    if (S.done) running = false;
+    const fresh = S.secs === 0 && S.history.length === 0;
+    if (!S.done) { picking = false; resultOpen = false; }
+    if (picking) resultOpen = false;
+    const showCover = running ? false : !S.done ? true : (picking || resultOpen);
+    $("cover").hidden = !showCover;
+    boardEl.classList.toggle("covered", showCover);
+    const resText = () => `Čas ${fmt(S.secs)}` + (S.errors ? ` + ${S.errors} × 30 s = ${fmt(total(S))}` : "") +
+      ` · chyby ${S.errors} · nápovědy ${S.learned ? "∞" : S.hints}.` +
+      (S.pending ? "" : S.rankInfo === -1 ? " Hra v režimu Učení se do žebříčku nezapisuje." : S.rankInfo === 0 ? " Do žebříčku 25 nejlepších se tentokrát nevejdeš." : "");
+    $("cover-title").textContent = picking ? "Nová hra" : resultOpen ? "Vyřešeno!" : fresh ? "Připraveno" : "Pauza";
+    $("cover-text").textContent = picking ? "Vyber obtížnost. Hra začne hned." : resultOpen ? resText() : fresh ? `Obtížnost ${DIFF[S.level].name}. Čas se začne počítat po startu.` : `Hra stojí na čase ${fmt(S.secs)}.`;
+    $("name-form").hidden = !(resultOpen && S.pending);
+    $("res-new").hidden = !(resultOpen && !S.pending);
+    $("go").hidden = picking || resultOpen;
+    $("pick").hidden = !picking; $("pick-cancel").hidden = !picking;
+    $("go").textContent = fresh ? "Začít" : "Pokračovat";
+    $("pause").textContent = S.done ? "Start" : running ? "Pauza" : "Pokračovat";
+    $("pause").classList.toggle("gear-start", S.done);
+  }
+  function setRunning(r) { running = r && !S.done; render(); save(); if (running && sel >= 0) cells[sel].focus(); }
+  const OPT = { peers: true, same: true, autonotes: true, warn: true, dup: true, lock: true, count: true, sound: true, volume: 6, learn: false, learnDelay: 5, pen: true, erase: true, unit: true, debug: false };
+  const solvedDigit = v => S.val.reduce((n, x, i) => n + (x === v && S.sol[i] === v), 0) === 9;
+  try { Object.assign(OPT, JSON.parse(localStorage.getItem("sudoku-settings")) || {}); } catch (e) {}
+  const saveOpt = () => { try { localStorage.setItem("sudoku-settings", JSON.stringify(OPT)); } catch (e) {} };
+
+  function newGame(lv) {
+    level = lv;
+    const { sol, puz } = generate(lv);
+    $("name-form").hidden = true;
+    S = { level: lv, sol, given: puz.map(v => v > 0), val: puz.slice(), notes: Array.from({ length: 81 }, () => 0),
+          errors: 0, secs: 0, done: false, history: [], hints: 0 };
+    if (OPT.debug) {
+      const empty = [...Array(81).keys()].filter(i => !S.given[i]);
+      const keep = empty[Math.random() * empty.length | 0];
+      for (const i of empty) if (i !== keep) S.val[i] = S.sol[i];
+      S.debug = true;
+    }
+    sel = S.val.indexOf(0); running = false; picking = false; resultOpen = false; learnCell = -1;
+    boardEl.classList.remove("solved", "finished");
+    setStatus("");
+    render(); startTimer(); save();
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => { if (!S.done && running && !document.hidden) { S.secs++; $("m-time").textContent = fmt(S.secs); if (S.secs % 5 === 0) save(); } }, 1000);
+  }
+  const fmt = s => String(s / 60 | 0).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  function setStatus(t, cls = "") { statusEl.textContent = t; statusEl.className = "status " + cls; }
+
+  function save() { try { localStorage.setItem("sudoku-game", JSON.stringify({ S, level })); } catch (e) {} }
+  function load() {
+    try { const d = JSON.parse(localStorage.getItem("sudoku-game")); if (d && d.S && d.S.sol && DIFF[d.S.level]) { S = d.S; level = d.level; return true; } } catch (e) {}
+    return false;
+  }
+
+  // ---------- build DOM ----------
+  const cells = [];
+  for (let i = 0; i < 81; i++) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cell"; b.id = "c" + i;
+    const r = (i / 9) | 0, c = i % 9;
+    if (c === 2 || c === 5) b.classList.add("br");
+    if (r === 2 || r === 5) b.classList.add("bb");
+    b.style.setProperty("--d", (r + c) * 45 + "ms");
+    b.addEventListener("click", () => { if (running) { sel = i; render(); } });
+    boardEl.appendChild(b); cells.push(b);
+  }
+  const padBtns = [];
+  for (let v = 1; v <= 9; v++) {
+    const b = document.createElement("button"); b.type = "button"; b.id = "p" + v;
+    b.innerHTML = v + "<small></small>"; b.setAttribute("aria-label", "Zapsat " + v);
+    b.addEventListener("click", () => input(v)); padEl.appendChild(b); padBtns.push(b);
+  }
+  const er = document.createElement("button"); er.type = "button"; er.id = "p0"; er.textContent = "⌫"; er.setAttribute("aria-label", "Smazat");
+  er.addEventListener("click", () => input(0)); padEl.appendChild(er);
+
+  // ---------- render ----------
+  function conflicts() {
+    const bad = new Set();
+    for (let i = 0; i < 81; i++) if (S.val[i]) for (const p of peers[i]) if (S.val[p] === S.val[i]) { bad.add(i); }
+    return bad;
+  }
+  function flag(i) {
+    if (!S.counted) S.counted = [];
+    const v = S.val[i], key = i + ":" + v;
+    if (S.given[i] || !v || v === S.sol[i] || S.counted.includes(key)) return;
+    S.counted.push(key); S.errors++;
+  }
+  function render() {
+    const bad = conflicts();
+    const sv = sel >= 0 && OPT.same ? S.val[sel] : 0;
+    const pset = sel >= 0 && OPT.peers ? new Set(peers[sel]) : new Set();
+    for (let i = 0; i < 81; i++) {
+      const el = cells[i], v = S.val[i];
+      el.className = el.className.replace(/\b(given|peer|same|sel|err|dup|learn)\b/g, "").trim();
+      if (S.given[i]) el.classList.add("given");
+      if (pset.has(i)) el.classList.add("peer");
+      if (sv && v === sv) el.classList.add("same");
+      if (i === sel) el.classList.add("sel");
+      if (i === learnCell && !S.done) el.classList.add("learn");
+      const isDup = OPT.dup && bad.has(i), isWrong = OPT.warn && v && v !== S.sol[i];
+      if (!S.given[i] && (isDup || isWrong)) el.classList.add("err");
+      else if (S.given[i] && isDup) el.classList.add("dup");
+      if (!S.done && (isDup || isWrong)) flag(i);
+      if (v) el.textContent = v;
+      else if (i === learnCell && !S.done) el.innerHTML = `<span class="ghost">${S.sol[i]}</span>`;
+      else if (S.notes[i]) {
+        let h = '<span class="notes">';
+        for (let n = 1; n <= 9; n++) h += "<i>" + (S.notes[i] & (1 << n) ? n : "") + "</i>";
+        el.innerHTML = h + "</span>";
+      } else el.textContent = "";
+      const r = (i / 9 | 0) + 1, c = i % 9 + 1;
+      el.setAttribute("aria-label", `Řádek ${r}, sloupec ${c}, ${v ? v : "prázdné"}${S.given[i] ? ", zadané" : ""}`);
+    }
+    const counts = Array(10).fill(0); S.val.forEach(v => counts[v]++);
+    padBtns.forEach((b, k) => { const left = 9 - counts[k + 1]; const off = OPT.lock && solvedDigit(k + 1); b.classList.toggle("done", off); b.disabled = off; b.querySelector("small").textContent = OPT.count && left > 0 ? left : ""; });
+    $("m-diff").textContent = DIFF[S.level].name;
+    $("m-time").textContent = fmt(S.secs);
+    $("m-err").textContent = S.errors;
+    $("m-learn").classList.toggle("off", !S.learned);
+    $("m-debug").classList.toggle("off", !S.debug);
+    document.querySelectorAll("#diff button").forEach(b => b.setAttribute("aria-pressed", b.dataset.d === level));
+    $("notes").setAttribute("aria-pressed", notesMode);
+    syncRun();
+  }
+
+  // ---------- actions ----------
+  function input(v) {
+    if (S.done || !running || sel < 0 || S.given[sel]) return;
+    learnCell = -1;
+    if (v && OPT.lock && S.val[sel] !== v && solvedDigit(v)) { setStatus(`Číslo ${v} už je správně doplněné na všech devíti místech.`); return; }
+    const prev = { i: sel, val: S.val[sel], notes: S.notes[sel] };
+    if (notesMode && v) {
+      if (S.val[sel]) return;
+      S.history.push(prev); S.notes[sel] ^= 1 << v; playPen("note", v);
+    } else {
+      if (S.val[sel] === v && v) return;
+      S.history.push(prev);
+      S.val[sel] = v; S.notes[sel] = 0; if (v) { playPen("digit", v); unitDone(sel); } else if (prev.val || prev.notes) playErase();
+      if (v) {
+        if (OPT.autonotes) for (const p of peers[sel]) S.notes[p] &= ~(1 << v);
+        const r = sel / 9 | 0, c = sel % 9, box = (r / 3 | 0) * 3 + (c / 3 | 0);
+        const where = [];
+        for (const p of peers[sel]) if (S.val[p] === v) {
+          const pr = p / 9 | 0, pc = p % 9;
+          if (pr === r) where.push("řádku"); else if (pc === c) where.push("sloupci");
+          else if ((pr / 3 | 0) * 3 + (pc / 3 | 0) === box) where.push("čtverci");
+        }
+        const dupMsg = OPT.dup && where.length ? `Číslo ${v} už je v tomto ${[...new Set(where)].join(" a ")}.` : "";
+        if (v !== S.sol[sel]) { setStatus(dupMsg || (OPT.warn ? "Tohle číslo sem nepatří." : ""), "warn"); }
+        else setStatus(dupMsg, "warn");
+      }
+    }
+    render(); checkWin(); save();
+  }
+  function undo() {
+    learnCell = -1;
+    if (S.done || !running) return;
+    const h = S.history.pop(); if (!h) return;
+    S.val[h.i] = h.val; S.notes[h.i] = h.notes; sel = h.i; setStatus(""); render(); save();
+  }
+  function hint() {
+    if (S.done || !running) return;
+    learnCell = -1;
+    let i = sel;
+    if (i < 0 || S.given[i] || S.val[i] === S.sol[i]) {
+      const open = [...Array(81).keys()].filter(k => S.val[k] !== S.sol[k]);
+      if (!open.length) return; i = open[Math.random() * open.length | 0];
+    }
+    if (S.val[i]) flag(i);
+    S.history.push({ i, val: S.val[i], notes: S.notes[i] });
+    S.val[i] = S.sol[i]; S.notes[i] = 0; S.hints++; unitDone(i);
+    if (OPT.autonotes) for (const p of peers[i]) S.notes[p] &= ~(1 << S.sol[i]);
+    sel = i; setStatus(`Nápověda: řádek ${(i / 9 | 0) + 1}, sloupec ${i % 9 + 1} je ${S.sol[i]}.`);
+    render(); checkWin(); save();
+  }
+  function check() {
+    if (S.done || !running) return;
+    const wrong = [...Array(81).keys()].filter(k => S.val[k] && S.val[k] !== S.sol[k]);
+    const empty = S.val.filter(v => !v).length;
+    if (wrong.length) {
+      wrong.forEach(k => { flag(k); cells[k].classList.add("err"); });
+      $("m-err").textContent = S.errors; save();
+      setStatus(`Chybně vyplněná pole: ${wrong.length}. Zbývá doplnit ${empty}.`, "warn");
+    } else setStatus(`Zatím vše v pořádku. Zbývá doplnit ${empty} ${empty === 1 ? "pole" : empty < 5 ? "pole" : "polí"}.`);
+  }
+  function checkWin() {
+    if (S.val.every((v, k) => v === S.sol[k])) {
+      S.done = true; sel = -1; render();
+      boardEl.classList.add("solved", "finished");
+      celebrate(); playVictory();
+      const rank = S.learned ? -1 : recordResult();
+      S.rankInfo = rank;
+      setTimeout(() => { if (S.done && !picking) { resultOpen = true; render(); showNameForm(); } }, 1800);
+      setStatus(`Vyřešeno za ${fmt(S.secs)}!` + (S.errors ? ` S trestem ${S.errors} × 30 s je výsledný čas ${fmt(total(S))}.` : "") + ` Chyby: ${S.errors}, nápovědy: ${S.learned ? "∞" : S.hints}.` +
+        (rank < 0 ? " Hra v režimu Učení se do žebříčku nezapisuje." : rank ? ` ${rank}. místo v žebříčku, napiš své jméno.` : " Do žebříčku to tentokrát nestačilo."), "win");
+      save();
+    }
+  }
+
+  // ---------- žebříček ----------
+  // Společná tabulka: každý výsledek je jeden dokument results/<id> = { level, name, secs, errors, hints, at }.
+  // Hráč se nijak neidentifikuje, jméno si napíše sám po výhře.
+  let TOP = {}, topLv = "medium", lastId = null, REMOTE = null, dbNs = null;
+  try { TOP = JSON.parse(localStorage.getItem("sudoku-top")) || {}; } catch (e) {}
+  const saveTop = () => { try { localStorage.setItem("sudoku-top", JSON.stringify(TOP)); } catch (e) {} };
+  // Výsledný čas = odehraný čas + 30 s za každou chybu
+  const PENALTY = 30;
+  const total = r => (+r.secs || 0) + PENALTY * (+r.errors || 0);
+  const byRank = (a, b) => total(a) - total(b) || a.errors - b.errors || a.hints - b.hints || a.at - b.at;
+  const clean = r => ({ id: String(r && r.id || ""), name: String(r && r.name || "").slice(0, 30), secs: Math.max(0, +r.secs || 0),
+    errors: Math.max(0, +r.errors || 0), hints: Math.max(0, +r.hints || 0), at: +r.at || 0, debug: !!(r && r.debug) });
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const setNote = t => { $("top-note").textContent = t; };
+  const sharedNote = () => "Společná tabulka všech hráčů. Výsledky se ukládají a načítají automaticky.";
+  function boardList(lv) {
+    let src = REMOTE && REMOTE[lv] ? REMOTE[lv] : (TOP[lv] || []);
+    if (!(REMOTE && REMOTE[lv]) && Array.isArray(EMBED[lv])) {
+      // Stejný výsledek v prohlížeči i v souboru: přednost má ten se jménem.
+      const named = new Map(EMBED[lv].filter(r => r && r.name).map(r => [String(r.id), r.name]));
+      src = src.map(r => (!r.name && named.has(String(r.id))) ? { ...r, name: named.get(String(r.id)) } : r);
+      const seen = new Set(src.map(r => String(r.id)));
+      let noDbg = false, noAll = false;
+      try { noDbg = localStorage.getItem("sudoku-embed-nodebug") === EMBED_REV; noAll = localStorage.getItem("sudoku-embed-hidden") === EMBED_REV; } catch (e) {}
+      if (noAll) noDbg = true;
+      if (!noAll) src = src.concat(EMBED[lv].filter(r => r && !seen.has(String(r.id)) && !(noDbg && r.debug)));
+    }
+    return src.map(clean).sort(byRank).slice(0, 25);
+  }
+  function recordResult() {
+    const entry = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), level: S.level, secs: S.secs, errors: S.errors, hints: S.hints, at: Date.now(), ...(S.debug ? { debug: true } : {}) };
+    const rank = boardList(S.level).concat(entry).sort(byRank).findIndex(r => r.id === entry.id) + 1;
+    if (rank < 1 || rank > 25) return 0;
+    S.pending = entry;
+    return rank;
+  }
+  function showNameForm() {
+    const f = $("name-form"); f.hidden = !(S && S.pending && resultOpen);
+    if (f.hidden) return;
+    const rank = boardList(S.pending.level).concat(S.pending).sort(byRank).findIndex(r => r.id === S.pending.id) + 1;
+    $("name-label").textContent = `Gratulace, ${rank}. místo v obtížnosti ${DIFF[S.pending.level].name} za ${fmt(total(S.pending))}${S.pending.errors ? ` (včetně trestu za chyby)` : ""}! Napiš jméno, pod kterým se zapíšeš.`;
+    $("name-err").textContent = "";
+    let last = ""; try { last = localStorage.getItem("sudoku-name") || ""; } catch (e) {}
+    if (!$("name-input").value) $("name-input").value = last;
+    setTimeout(() => $("name-input").focus(), 60);
+  }
+  async function submitName(e) {
+    e.preventDefault();
+    const name = $("name-input").value.trim().replace(/\s+/g, " ").slice(0, 30);
+    if (!name) { $("name-err").textContent = "Napiš jméno, nebo zvol Nezapisovat."; return; }
+    if (!S.pending) return;
+    const entry = { ...S.pending, name };
+    S.pending = null; save();
+    try { localStorage.setItem("sudoku-name", name); } catch (err) {}
+    resultOpen = false; lastId = entry.id; render();
+    TOP[entry.level] = (TOP[entry.level] || []).concat(entry).sort(byRank).slice(0, 25); saveTop();
+    if (dbNs) {
+      const { id, ...body } = entry;
+      if (REMOTE && REMOTE[entry.level]) REMOTE = { ...REMOTE, [entry.level]: REMOTE[entry.level].concat(entry) };
+      renderTop();
+      try { await dbNs.collection("results").doc(id).set(body); setNote(sharedNote()); }
+      catch (err) {
+        setNote(err && err.code === "invalid_argument"
+          ? "Výsledek se do společné tabulky neuložil, protože nemáš oprávnění zapisovat. Požádej autora hry o přístup Contributor. V tomto prohlížeči zůstal uložený."
+          : "Výsledek se do společné tabulky zatím neuložil, zkus hru znovu načíst. V tomto prohlížeči zůstal uložený.");
+      }
+    }
+    showTop(entry.level);
+    setStatus(`Zapsáno do žebříčku jako ${name}.`, "win");
+    setTimeout(saveToFile, 1600);
+    requestAnimationFrame(() => { const row = document.querySelector("#top-body tr.new"); if (row) row.scrollIntoView({ block: "center", behavior: "smooth" }); });
+  }
+  $("name-form").addEventListener("submit", submitName);
+  $("name-skip").addEventListener("click", () => { S.pending = null; S.rankInfo = "skip"; save(); render(); setStatus("Výsledek jsi do žebříčku nezapsal."); });
+  $("res-new").addEventListener("click", () => { resultOpen = false; picking = true; render(); });
+  const tabsEl = $("top-tabs");
+  for (const [k, d] of Object.entries(DIFF)) {
+    const b = document.createElement("button"); b.type = "button"; b.id = "tt-" + k; b.dataset.d = k; b.setAttribute("role", "tab"); b.textContent = d.name;
+    b.addEventListener("click", () => { topLv = k; renderTop(); }); tabsEl.appendChild(b);
+  }
+  function renderTop() {
+    const lv = topLv;
+    tabsEl.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.d === lv));
+    const list = boardList(lv);
+    if (!list.length) { $("top-body").innerHTML = `<p class="empty">Zatím žádné dokončené hry na obtížnost ${DIFF[lv].name}.</p>`; return; }
+    const df = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    $("top-body").innerHTML = "<table><thead><tr><th>#</th><th>Hráč</th><th>Čas</th><th>Chyby</th><th>Nápovědy</th><th>Datum</th></tr></thead><tbody>" +
+      list.map((r, i) => `<tr class="${r.id === lastId ? "new" : ""}"><td class="r">${i + 1}.</td><td class="who">${esc(r.name || "—")}${r.debug ? '<span class="dbg" title="Debug mód"> *</span>' : ""}</td><td class="t${r.errors ? " pen" : ""}"${r.errors ? ` title="${fmt(r.secs)} + ${r.errors} × 30 s"` : ""}>${fmt(total(r))}${r.errors ? `<small>${fmt(r.secs)} + ${r.errors} × 30 s</small>` : ""}</td><td>${r.errors}</td><td>${r.hints}</td><td>${r.at ? df.format(r.at) : ""}</td></tr>`).join("") +
+      "</tbody></table>" +
+      (list.some(r => r.errors) ? '<p class="legend"><b>Červený čas</b> obsahuje trest 30 s za každou chybu.</p>' : "") +
+      (list.some(r => r.debug) ? '<p class="legend"><span class="dbg">*</span> Hra v debug módu: sudoku bylo předvyplněné až na poslední pole.</p>' : "");
+  }
+
+  // ---------- Hra: reset celého žebříčku ----------
+  const plural = (n, a, b, c) => n === 1 ? a : n > 1 && n < 5 ? b : c;
+  function countAll() {
+    let n = 0;
+    for (const lv of Object.keys(DIFF)) n += boardListAll(lv);
+    return n;
+  }
+  function boardListAll(lv) {
+    if (REMOTE && REMOTE[lv]) return REMOTE[lv].length;
+    let noAll = false; try { noAll = localStorage.getItem("sudoku-embed-hidden") === EMBED_REV; } catch (e) {}
+    const ids = new Set((TOP[lv] || []).map(r => String(r.id)));
+    if (!noAll && Array.isArray(EMBED[lv])) EMBED[lv].forEach(r => r && ids.add(String(r.id)));
+    return ids.size;
+  }
+  $("all-reset").addEventListener("click", () => {
+    const n = countAll();
+    $("all-msg").textContent = "";
+    if (!n) { $("all-msg").textContent = "Žebříček je prázdný."; return; }
+    $("all-question").textContent = `Smazat celý žebříček, ${n} ${plural(n, "výsledek", "výsledky", "výsledků")} ve všech obtížnostech včetně debug? Smaže se v tomto prohlížeči a nejde to vrátit.`;
+    $("all-confirm").hidden = false; $("all-reset").hidden = true;
+  });
+  $("all-no").addEventListener("click", () => { $("all-confirm").hidden = true; $("all-reset").hidden = false; });
+  $("all-yes").addEventListener("click", async () => {
+    $("all-confirm").hidden = true; $("all-reset").hidden = false;
+    let removed = countAll(), failed = 0;
+    TOP = {}; saveTop(); lastId = null;
+    try { localStorage.setItem("sudoku-embed-hidden", EMBED_REV); } catch (e) {}
+    if (dbNs) {
+      removed = 0; $("all-msg").textContent = "Mažu…";
+      try {
+        let snap;
+        do {
+          snap = await dbNs.collection("results").limit(500).get();
+          let ok = 0;
+          for (const d of snap.docs) { try { await dbNs.doc("results/" + d.id).delete(); removed++; ok++; } catch (e) { failed++; } }
+          if (!ok) break;
+        } while (snap.size === 500);
+      } catch (e) { failed++; }
+    }
+    renderTop(); saveToFile();
+    $("all-msg").textContent = failed
+      ? `Smazáno ${removed}, ${failed} se smazat nepodařilo. Ke smazání ze společného žebříčku je potřeba přístup Contributor.`
+      : `Žebříček je prázdný. Počet smazaných výsledků: ${removed}.`;
+  });
+
+  // ---------- Debug: smazání výsledků s hvězdičkou ----------
+  function countDebug() {
+    let n = 0;
+    for (const lv of Object.keys(DIFF)) {
+      const src = REMOTE && REMOTE[lv] ? REMOTE[lv] : (TOP[lv] || []).concat(Array.isArray(EMBED[lv]) ? EMBED[lv] : []);
+      n += src.filter(r => r && r.debug).length;
+    }
+    return n;
+  }
+  $("dbg-reset").addEventListener("click", () => {
+    const n = countDebug();
+    $("dbg-msg").textContent = "";
+    if (!n) { $("dbg-msg").textContent = "V žebříčku nejsou žádné debug výsledky."; return; }
+    $("dbg-question").textContent = `Smazat ${n} ${n === 1 ? "výsledek označený" : n < 5 ? "výsledky označené" : "výsledků označených"} hvězdičkou? Nejde to vrátit.`;
+    $("dbg-confirm").hidden = false; $("dbg-reset").hidden = true;
+  });
+  $("dbg-no").addEventListener("click", () => { $("dbg-confirm").hidden = true; $("dbg-reset").hidden = false; });
+  $("dbg-yes").addEventListener("click", async () => {
+    $("dbg-confirm").hidden = true; $("dbg-reset").hidden = false;
+    let removed = 0, failed = 0;
+    for (const k in TOP) { const b = (TOP[k] || []).length; TOP[k] = (TOP[k] || []).filter(r => !r.debug); removed += b - TOP[k].length; }
+    saveTop();
+    try { localStorage.setItem("sudoku-embed-nodebug", EMBED_REV); } catch (e) {}
+    if (dbNs) {
+      removed = 0;
+      $("dbg-msg").textContent = "Mažu…";
+      try {
+        const snap = await dbNs.collection("results").where("debug", "==", true).get();
+        for (const d of snap.docs) {
+          try { await dbNs.doc("results/" + d.id).delete(); removed++; } catch (e) { failed++; }
+        }
+      } catch (e) { failed++; }
+    }
+    renderTop(); saveToFile();
+    $("dbg-msg").textContent = failed
+      ? `Smazáno ${removed}, ${failed} se smazat nepodařilo. Ke smazání ze společného žebříčku je potřeba přístup Contributor.`
+      : `Počet smazaných debug výsledků: ${removed}.`;
+  });
+  if (!window.claude?.use && EMBED_REV !== "0") {
+    const t = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(+EMBED_REV);
+    setNote(`Kopie hry se žebříčkem uloženým ${t}. Nové výsledky se ukládají jen v tomto prohlížeči.`);
+  }
+
+  // ---------- Soubor hry: stejný dokument pro Sdílej i pro uložení stránky ----------
+  // Stejný tvar, jaký má zveřejněná stránka: kostra + obsah stránky + vložený žebříček.
+  const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
+  function currentResults() {
+    const r = {};
+    for (const lv of Object.keys(DIFF)) { const l = boardList(lv); if (l.length) r[lv] = l; }
+    return r;
+  }
+  function buildDocument(results, savedAt) {
+    const embed = JSON.stringify({ savedAt, results }).replace(/</g, "\\u003c");
+    return SKELETON + "\n" + PRISTINE.join("\n") + "\n" +
+      '<scr' + 'ipt id="sudoku-embed">window.SUDOKU_EMBED = ' + embed + ';</scr' + 'ipt>' + "\n" +
+      MAIN_SCRIPT.outerHTML + "\n\n</body></html>";
+  }
+  function buildExport() {
+    const results = currentResults();
+    const unchanged = JSON.stringify(results) === JSON.stringify((window.SUDOKU_EMBED && window.SUDOKU_EMBED.results) || {});
+    return buildDocument(results, unchanged && EMBED_REV !== "0" ? +EMBED_REV : Date.now());
+  }
+  // Uloží žebříček přímo do stránky (nová verze). Kdo nemá právo stránku upravovat, má výsledky jen v prohlížeči.
+  let artifactNs;
+  async function saveToFile() {
+    try { if (artifactNs === undefined) artifactNs = window.claude?.use ? await window.claude.use("artifact") : null; } catch (e) { artifactNs = null; }
+    if (!artifactNs) return;
+    try { await artifactNs.publish(buildDocument(currentResults(), Date.now())); }
+    catch (e) {
+      if (e && (e.code === "not_granted" || e.code === "not_writer")) setNote("Žebříček je uložený jen v tomto prohlížeči, protože nemáš oprávnění hru upravovat.");
+      else if (!(e && e.code === "conflict")) setNote("Žebříček se do souboru hry teď neuložil. V tomto prohlížeči zůstal.");
+    }
+  }
+  async function share() {
+    const html = buildExport();
+    const d = new Date(), pad = n => String(n).padStart(2, "0");
+    const filename = `Sudoku-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}.html`;
+    let dl = null;
+    try { dl = window.claude?.use ? await window.claude.use("downloads") : null; } catch (e) {}
+    if (dl) {
+      try { await dl.save({ filename, data: html }); setStatus(`Soubor ${filename} je stažený. Pošli ho komukoli, otevře se v prohlížeči se žebříčkem.`); }
+      catch (e) { setStatus(e && e.code === "declined" ? "Stažení jsi zrušil." : "Soubor se teď nepodařilo stáhnout. Zkus to za chvíli znovu.", e && e.code === "declined" ? "" : "warn"); }
+      return;
+    }
+    if (window.claude?.use) { setStatus("Stahování souborů tu není dostupné.", "warn"); return; }
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    setStatus(`Soubor ${filename} je stažený.`);
+  }
+  $("share").addEventListener("click", share);
+  // Otevřené Nastavení nebo žebříček schová hrací plochu a panel; běžící hru pozastaví a po zavření v ní pokračuje.
+  let resumeAfterPanel = false;
+  function setPanel(name) {
+    const cur = !$("settings").hidden ? "settings" : !$("top").hidden ? "top" : null;
+    if (cur === name) return;
+    $("settings").hidden = name !== "settings"; $("gear").setAttribute("aria-expanded", name === "settings");
+    $("top").hidden = name !== "top"; $("topbtn").setAttribute("aria-expanded", name === "top");
+    $("main").hidden = !!name;
+    if (name && !cur) { resumeAfterPanel = !!(S && running && !S.done); if (resumeAfterPanel) setRunning(false); }
+    else if (!name && resumeAfterPanel) { resumeAfterPanel = false; setRunning(true); }
+  }
+  const setSettings = open => setPanel(open ? "settings" : null);
+  function showTop(lv) { topLv = lv; renderTop(); setPanel("top"); }
+  $("topbtn").addEventListener("click", () => { if ($("top").hidden) showTop(S ? S.level : level); else setPanel(null); });
+  $("top-close").addEventListener("click", () => setPanel(null));
+  function askNew() {
+    const started = S && !S.done && S.history.length > 0;
+    if (started) { $("confirm").hidden = false; return; }
+    startNew();
+  }
+  function startNew() {
+    $("confirm").hidden = true;
+    setStatus("Generuji…");
+    setTimeout(() => newGame(level), 20);
+  }
+
+  $("diff").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    level = b.dataset.d; render(); askNew();
+  });
+  $("new").addEventListener("click", askNew);
+  $("c-yes").addEventListener("click", startNew);
+  $("c-no").addEventListener("click", () => { $("confirm").hidden = true; level = S.level; render(); });
+  $("notes").addEventListener("click", () => { notesMode = !notesMode; render(); });
+  $("go").addEventListener("click", () => setRunning(true));
+  function pauseButton() {
+    const panelOpen = !$("settings").hidden || !$("top").hidden;
+    if (panelOpen) {
+      // Z Nastavení nebo Žebříčku se tlačítkem přepne zpět do hry.
+      resumeAfterPanel = false; setPanel(null);
+      if (S.done) { picking = true; $("confirm").hidden = true; render(); }
+      else setRunning(true);
+      return;
+    }
+    if (S.done) { picking = !picking; $("confirm").hidden = true; render(); return; }
+    setRunning(!running);
+  }
+  $("pause").addEventListener("click", pauseButton);
+  for (const [k, d] of Object.entries(DIFF)) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.id = "pk-" + k; b.textContent = d.name;
+    b.addEventListener("click", () => {
+      picking = false; level = k; $("pick").hidden = true;
+      $("cover-title").textContent = "Generuji…"; $("cover-text").textContent = "";
+      setTimeout(() => { newGame(k); setRunning(true); }, 20);
+    });
+    $("pick").appendChild(b);
+  }
+  $("pick-cancel").addEventListener("click", () => { picking = false; render(); });
+
+  let audioCtx = null;
+  function playVictory() {
+    if (!OPT.sound) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const t0 = audioCtx.currentTime + 0.05;
+      const master = audioCtx.createGain(); master.gain.value = 0.04 * Math.min(10, Math.max(1, +OPT.volume || 6)); master.connect(audioCtx.destination);
+      // C5 E5 G5 C6 … G5 C6 (fanfára) a závěrečný akord C dur
+      const notes = [[523.25, 0, 0.14], [659.25, 0.14, 0.14], [783.99, 0.28, 0.14], [1046.5, 0.42, 0.3],
+        [783.99, 0.78, 0.12], [1046.5, 0.92, 0.6], [523.25, 0.92, 0.9], [659.25, 0.92, 0.9], [783.99, 0.92, 0.9]];
+      for (const [f, at, len] of notes) {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = "triangle"; o.frequency.value = f;
+        g.gain.setValueAtTime(0, t0 + at);
+        g.gain.linearRampToValueAtTime(1, t0 + at + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + at + len);
+        o.connect(g); g.connect(master); o.start(t0 + at); o.stop(t0 + at + len + 0.05);
+      }
+    } catch (e) {}
+  }
+  function celebrate() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const cv = document.createElement("canvas"); cv.className = "confetti"; document.body.appendChild(cv);
+    const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+    const cs = getComputedStyle(document.documentElement);
+    const cols = ["--accent", "--good", "--bad", "--ink"].map(v => cs.getPropertyValue(v).trim()).concat("#e3a62a", "#8b5cf6");
+    const rc = boardEl.getBoundingClientRect(), ox = rc.left + rc.width / 2, oy = rc.top + rc.height / 2;
+    const P = Array.from({ length: 180 }, () => {
+      const a = Math.random() * Math.PI * 2, s = 4 + Math.random() * 9;
+      return { x: ox, y: oy, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 6, w: 6 + Math.random() * 6, h: 3 + Math.random() * 5,
+        r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: cols[Math.random() * cols.length | 0] };
+    });
+    const t0 = performance.now();
+    (function frame(t) {
+      const el = t - t0; ctx.clearRect(0, 0, W, H);
+      ctx.globalAlpha = Math.max(0, 1 - Math.max(0, el - 2200) / 800);
+      for (const p of P) {
+        p.vy += 0.22; p.vx *= 0.985; p.vy *= 0.985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
+        ctx.fillRect(-p.w / 2, -p.h / 2 * Math.abs(Math.cos(p.r * 2)), p.w, p.h * Math.abs(Math.cos(p.r * 2)) + 0.5); ctx.restore();
+      }
+      if (el < 3000) requestAnimationFrame(frame); else cv.remove();
+    })(t0);
+  }
+  $("gear").addEventListener("click", () => setPanel($("settings").hidden ? "settings" : null));
+  $("settings-close").addEventListener("click", () => setSettings(false));
+  // ---------- Učení ----------
+  let lastAct = Date.now(), learnCell = -1;
+  ["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, () => { lastAct = Date.now(); }, true));
+  const UNITS = [];
+  for (let k = 0; k < 9; k++) {
+    UNITS.push({ name: `řádku ${k + 1}`, cells: [...Array(9).keys()].map(c => k * 9 + c) });
+    UNITS.push({ name: `sloupci ${k + 1}`, cells: [...Array(9).keys()].map(r => r * 9 + k) });
+    const br = (k / 3 | 0) * 3, bc = (k % 3) * 3;
+    UNITS.push({ name: `čtverci ${k + 1}`, cells: [...Array(9).keys()].map(j => (br + (j / 3 | 0)) * 9 + bc + j % 3) });
+  }
+  function findHint() {
+    const pos = i => `řádek ${(i / 9 | 0) + 1}, sloupec ${i % 9 + 1}`;
+    const wrong = S.val.findIndex((v, i) => v && v !== S.sol[i] && !S.given[i]);
+    if (wrong >= 0) return { i: wrong, text: `Pole ${pos(wrong)} je vyplněné špatně. Smaž ho a zkus to promyslet znovu.` };
+    const g = S.val.slice();
+    for (let i = 0; i < 81; i++) if (!g[i]) {
+      const c = candidates(g, i);
+      if (c.length === 1) return { i, text: `Do pole ${pos(i)} se hodí jen číslo ${c[0]}. Všechna ostatní čísla už jsou v jeho řádku, sloupci nebo čtverci.` };
+    }
+    for (const u of UNITS) for (let v = 1; v <= 9; v++) {
+      if (u.cells.some(i => g[i] === v)) continue;
+      const spots = u.cells.filter(i => !g[i] && candidates(g, i).includes(v));
+      if (spots.length === 1) return { i: spots[0], text: `Číslo ${v} se v ${u.name} vejde jen do pole ${pos(spots[0])}. Všude jinde mu překáží stejné číslo v řádku, sloupci nebo čtverci.` };
+    }
+    let best = -1, bc = null;
+    for (let i = 0; i < 81; i++) if (!g[i]) { const c = candidates(g, i); if (!bc || c.length < bc.length) { best = i; bc = c; } }
+    return best < 0 ? null : { i: best, text: `Nejméně možností má pole ${pos(best)}: ${bc.join(", ")}. Zapiš si je do poznámek a hledej, které z nich jinde nejde.` };
+  }
+  function learnTick() {
+    if (!S || S.done || !running) return;
+    if (OPT.learn && !S.learned) { S.learned = true; save(); render(); }
+    if (!OPT.learn || learnCell >= 0 || Date.now() - lastAct < 1000 * Math.min(15, Math.max(1, +OPT.learnDelay || 5))) return;
+    const h = findHint(); if (!h) return;
+    learnCell = h.i; render();
+  }
+  setInterval(learnTick, 500);
+  $("s-learn").addEventListener("change", () => { if (!$("s-learn").checked) { learnCell = -1; render(); } lastAct = Date.now(); syncLearn(); });
+  function syncLearn() {
+    $("s-learn-delay").value = OPT.learnDelay; $("learn-out").textContent = OPT.learnDelay + " s";
+    const on = $("s-learn").checked;
+    $("s-learn-delay").disabled = !on; $("learn-row").classList.toggle("off", !on);
+  }
+  $("s-learn-delay").addEventListener("input", () => { OPT.learnDelay = +$("s-learn-delay").value; $("learn-out").textContent = OPT.learnDelay + " s"; });
+  $("s-learn-delay").addEventListener("change", () => { saveOpt(); lastAct = Date.now(); });
+  queueMicrotask(syncLearn);
+
+  function syncVolume() {
+    $("s-volume").value = OPT.volume; $("vol-out").textContent = OPT.volume;
+    const on = $("s-sound").checked;
+    $("s-volume").disabled = !on; $("vol-row").classList.toggle("off", !on);
+    $("s-pen").disabled = !on; $("pen-row").classList.toggle("off", !on);
+    $("s-erase").disabled = !on; $("erase-row").classList.toggle("off", !on);
+    $("s-unit").disabled = !on; $("unit-row").classList.toggle("off", !on);
+  }
+  // Zvuk zápisu: krátký jemný tón (marimba), každá číslice má svůj tón z pentatoniky
+  const PEN_NOTES = [0, 392, 440, 523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66];
+  // Dokončený řádek / sloupec / čtverec
+  function unitDone(i) {
+    // S vypnutým upozorněním na špatné číslo stačí, aby byl celek plný – zvuk tak neprozradí chybu.
+    if (S.val.every((x, k) => x === S.sol[k])) return;
+    if (OPT.warn && S.val[i] !== S.sol[i]) return;
+    const r = i / 9 | 0, c = i % 9, br = r - r % 3, bc = c - c % 3;
+    const ok = k => OPT.warn ? S.val[k] === S.sol[k] : S.val[k] > 0;
+    let n = 0;
+    if ([...Array(9).keys()].every(j => ok(r * 9 + j))) n++;
+    if ([...Array(9).keys()].every(j => ok(j * 9 + c))) n++;
+    if ([...Array(9).keys()].every(j => ok((br + (j / 3 | 0)) * 9 + bc + j % 3))) n++;
+    if (n) playUnit(n);
+  }
+  function playUnit(n) {
+    if (!OPT.sound || !OPT.unit) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const vol = 0.025 * Math.min(10, Math.max(1, +OPT.volume || 6));
+      const seq = [[659.25, 783.99, 1046.5], [659.25, 783.99, 1046.5, 1318.5], [659.25, 783.99, 1046.5, 1318.5, 1568]][n - 1];
+      const t0 = audioCtx.currentTime + 0.14;
+      seq.forEach((f, k) => {
+        const t = t0 + k * 0.07, len = k === seq.length - 1 ? 0.7 : 0.4;
+        const o = audioCtx.createOscillator(), o2 = audioCtx.createOscillator(), g = audioCtx.createGain(), g2 = audioCtx.createGain();
+        o.type = "sine"; o.frequency.value = f; o2.type = "sine"; o2.frequency.value = f * 2.76; g2.gain.value = 0.15;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0005, t + len);
+        o.connect(g); o2.connect(g2); g2.connect(g); g.connect(audioCtx.destination);
+        o.start(t); o2.start(t); o.stop(t + len + 0.05); o2.stop(t + len + 0.05);
+      });
+    } catch (e) {}
+  }
+  function playErase() {
+    if (!OPT.sound || !OPT.erase) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const vol = 0.022 * Math.min(10, Math.max(1, +OPT.volume || 6)), t = audioCtx.currentTime + 0.005, len = 0.16;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(), lp = audioCtx.createBiquadFilter();
+      o.type = "sine"; o.frequency.setValueAtTime(620, t); o.frequency.exponentialRampToValueAtTime(260, t + len);
+      lp.type = "lowpass"; lp.frequency.value = 1800;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0005, t + len);
+      o.connect(lp); lp.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + len + 0.03);
+    } catch (e) {}
+  }
+  function playPen(kind, digit) {
+    if (!OPT.sound || !OPT.pen) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const vol = 0.03 * Math.min(10, Math.max(1, +OPT.volume || 6)) * (kind === "note" ? 0.5 : 1);
+      const f = PEN_NOTES[digit] || 660, t = audioCtx.currentTime + 0.005, len = kind === "note" ? 0.18 : 0.32;
+      const out = audioCtx.createGain(); out.connect(audioCtx.destination);
+      out.gain.setValueAtTime(0, t);
+      out.gain.linearRampToValueAtTime(vol, t + 0.004);
+      out.gain.exponentialRampToValueAtTime(0.0005, t + len);
+      const lp = audioCtx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2400; lp.connect(out);
+      [[1, 1], [4, 0.12]].forEach(([mul, amp]) => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = "sine"; o.frequency.value = f * mul; g.gain.value = amp;
+        o.connect(g); g.connect(lp); o.start(t); o.stop(t + len + 0.05);
+      });
+    } catch (e) {}
+  }
+  function playTick() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const t = audioCtx.currentTime + 0.02, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "triangle"; o.frequency.value = 783.99;
+      g.gain.setValueAtTime(0.04 * OPT.volume, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.2);
+    } catch (e) {}
+  }
+  $("s-volume").addEventListener("input", () => { OPT.volume = +$("s-volume").value; $("vol-out").textContent = OPT.volume; });
+  $("s-volume").addEventListener("change", () => { saveOpt(); playTick(); });
+  $("s-sound").addEventListener("change", syncVolume);
+  queueMicrotask(syncVolume);
+  [["s-peers", "peers"], ["s-same", "same"], ["s-autonotes", "autonotes"], ["s-warn", "warn"], ["s-dup", "dup"], ["s-lock", "lock"], ["s-count", "count"], ["s-sound", "sound"], ["s-learn", "learn"], ["s-pen", "pen"], ["s-erase", "erase"], ["s-unit", "unit"], ["s-debug", "debug"]].forEach(([id, key]) => {
+    $(id).checked = OPT[key];
+    $(id).addEventListener("change", () => { OPT[key] = $(id).checked; saveOpt(); render(); });
+  });
+  $("undo").addEventListener("click", undo);
+  $("hint").addEventListener("click", hint);
+  $("check").addEventListener("click", check);
+
+  document.addEventListener("keydown", e => {
+    if (e.target && e.target.closest && e.target.closest("input, textarea, select")) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    if (/^[1-9]$/.test(k)) { input(+k); e.preventDefault(); }
+    else if (k === "Backspace" || k === "Delete" || k === "0") { input(0); e.preventDefault(); }
+    else if (k === "n" || k === "N") { notesMode = !notesMode; render(); }
+    else if (k === "p" || k === "P") { if (S && !S.done) pauseButton(); }
+    else if (k.startsWith("Arrow") && running) {
+      e.preventDefault();
+      if (sel < 0) sel = 0;
+      let r = sel / 9 | 0, c = sel % 9;
+      if (k === "ArrowUp") r = (r + 8) % 9; if (k === "ArrowDown") r = (r + 1) % 9;
+      if (k === "ArrowLeft") c = (c + 8) % 9; if (k === "ArrowRight") c = (c + 1) % 9;
+      sel = r * 9 + c; render(); cells[sel].focus();
+    }
+  });
+
+  // ---------- boot ----------
+  function start(data) {
+    if (data && data.S) { S = data.S; level = data.level; sel = data.sel ?? -1; running = !!data.running; render(); startTimer(); if (S.done) { boardEl.classList.add("finished"); } }
+    else if (load()) { sel = S.done ? -1 : S.val.indexOf(0); if (S.done) boardEl.classList.add("finished"); render(); startTimer(); if (S.done) setStatus("Hra je dohraná. Novou začneš tlačítkem Start.", "win"); }
+    else newGame("medium");
+    if (S && S.done && S.pending) { resultOpen = true; render(); showNameForm(); }
+    if (data && data.panel) { lastId = data.lastId || null; if (data.panel === "top") showTop(data.topLv || S.level); else setPanel("settings"); resumeAfterPanel = !!data.resume && !S.done; }
+  }
+  window.claude?.hot?.snapshot?.(() => ({ S, level, sel, running, panel: !$("top").hidden ? "top" : !$("settings").hidden ? "settings" : null, topLv, lastId, resume: resumeAfterPanel }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body></html>
