@@ -128,6 +128,7 @@
   "name.congrats": "Gratulace, {r}. místo v obtížnosti {d} za {t}{p}! Napiš jméno, pod kterým se zapíšeš.",
   "name.penalty": " (včetně trestu za chyby)",
   "name.err": "Napiš jméno, nebo zvol Nezapisovat.",
+  "msg.review": "Buď seš mistr světa v sudoku, nebo tady někdo švindluje. Tvůj výsledek bude validován.",
   "msg.saved": "Zapsáno do žebříčku jako {n}.",
   "msg.skipped": "Výsledek jsi do žebříčku nezapsal.",
   "msg.finished": "Hra je dohraná. Novou začneš tlačítkem Nová hra.",

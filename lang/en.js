@@ -128,6 +128,7 @@
   "name.congrats": "Congratulations, place {r} on {d} with {t}{p}! Enter the name to record.",
   "name.penalty": " (including the mistake penalty)",
   "name.err": "Enter a name or choose Skip.",
+  "msg.review": "Either you're a sudoku world champion, or someone's cheating here. Your result will be validated.",
   "msg.saved": "Recorded in the leaderboard as {n}.",
   "msg.skipped": "You didn't record the result.",
   "msg.finished": "This game is finished. Start another with New game.",

@@ -193,6 +193,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .name-err { color: var(--bad); font-size: 0.85rem; min-height: 0; }
 .name-err:empty { display: none; }
 .top-note { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.top-review { margin: 0; padding: 10px 12px; border: 1px solid var(--bad); border-radius: 8px; background: var(--bad-soft); color: var(--ink); font-weight: 600; }
 .tbl .empty { color: var(--muted); font-size: 0.9rem; padding: 6px 0; }
 .confirm { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft); font-size: 0.88rem; }
 .confirm div { display: flex; gap: 8px; }
@@ -281,6 +282,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   <section class="settings" id="top" hidden="" aria-label="Žebříček" data-i18n-aria="top.title">
     <h2 data-i18n="top.title">Žebříček</h2>
+    <p class="top-review" id="top-review" hidden data-i18n="msg.review">Buď seš mistr světa v sudoku, nebo tady někdo švindluje. Tvůj výsledek bude validován.</p>
     <div class="tabs" id="top-tabs" role="tablist"></div>
     <div class="tbl" id="top-body"></div>
     <p class="top-note" id="top-note" data-i18n="top.note">Žebříček se ukládá v tomto prohlížeči.</p>
@@ -739,10 +741,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       if (noAll) noDbg = true;
       if (!noAll) src = src.concat(EMBED[lv].filter(r => r && !seen.has(String(r.id)) && !(noDbg && r.debug)));
     }
-    return src.map(clean).sort(byRank).slice(0, 25);
+    // výsledky čekající na ověření (podezřele rychlé) se nezobrazují
+    return src.filter(r => r && !r.review).map(clean).sort(byRank).slice(0, 25);
   }
+  // Méně než 2 s na jedno doplněné číslo je podezřele rychlé: výsledek se zapíše, ale čeká na ověření.
+  const MIN_SECS_PER_CELL = 2;
+  const isSuspicious = st => !st.debug && st.secs < MIN_SECS_PER_CELL * st.given.filter(g => !g).length;
   function recordResult() {
-    const entry = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), level: S.level, secs: S.secs, errors: S.errors, hints: S.hints, at: Date.now(), ...(S.debug ? { debug: true } : {}) };
+    const entry = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), level: S.level, secs: S.secs, errors: S.errors, hints: S.hints, at: Date.now(), ...(S.debug ? { debug: true } : {}), ...(isSuspicious(S) ? { review: true } : {}) };
     const rank = boardList(S.level).concat(entry).sort(byRank).findIndex(r => r.id === entry.id) + 1;
     if (rank < 1 || rank > 25) return 0;
     S.pending = entry;
@@ -773,7 +779,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       flushPending().then(remoteLoad);
     }
     showTop(entry.level);
-    setStatus(t("msg.saved", { n: name }), "win");
+    if (entry.review) { setStatus(t("msg.review"), "warn"); $("top-review").hidden = false; }
+    else setStatus(t("msg.saved", { n: name }), "win");
     setTimeout(saveToFile, 1600);
     requestAnimationFrame(() => { const row = document.querySelector("#top-body tr.new"); if (row) row.scrollIntoView({ block: "center", behavior: "smooth" }); });
   }
@@ -949,6 +956,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   function setPanel(name) {
     const cur = !$("settings").hidden ? "settings" : !$("top").hidden ? "top" : null;
     if (cur === name) return;
+    if (cur === "top") $("top-review").hidden = true;
     $("settings").hidden = name !== "settings"; $("gear").setAttribute("aria-expanded", name === "settings");
     $("top").hidden = name !== "top"; $("topbtn").setAttribute("aria-expanded", name === "top");
     $("main").hidden = !!name;

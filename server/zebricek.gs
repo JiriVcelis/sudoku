@@ -8,13 +8,18 @@
  */
 const SHEETS = { "": "Výsledky", "main": "Výsledky", "test": "Test" };
 const LEVELS = ["novice", "beginner", "easy", "medium", "hard", "expert"];
-const HEADER = ["id", "level", "name", "secs", "errors", "hints", "at", "debug"];
+const HEADER = ["id", "level", "name", "secs", "errors", "hints", "at", "debug", "validace"];
+// Počet čísel k doplnění podle obtížnosti a minimální čas na jedno číslo; rychlejší výsledky čekají na ověření.
+const EMPTY = { novice: 21, beginner: 27, easy: 33, medium: 41, hard: 49, expert: 56 };
+const MIN_SECS_PER_CELL = 2;
+const REVIEW = "CHECK"; // ke schválení přepiš na OK (nebo smaž), k zamítnutí smaž řádek
 
 function sheet_(key) {
   const name = SHEETS[String(key || "")] || SHEETS[""];
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(name);
   if (!sh) { sh = ss.insertSheet(name); sh.appendRow(HEADER); sh.setFrozenRows(1); }
+  if (sh.getRange(1, HEADER.length).getValue() === "") sh.getRange(1, HEADER.length).setValue(HEADER[HEADER.length - 1]);
   return sh;
 }
 function json_(o) {
@@ -32,7 +37,8 @@ function int_(v, max) {
 // Čtení: všechny výsledky daného listu.
 function doGet(e) {
   const sh = sheet_(e && e.parameter && e.parameter.sheet);
-  const results = rows_(sh).filter(r => r[0] !== "").map(r => ({
+  // výsledky čekající na ověření se nezobrazují (schválení = ve sloupci validace napsat OK nebo text smazat)
+  const results = rows_(sh).filter(r => r[0] !== "" && (String(r[8]).trim() === "" || String(r[8]).trim().toUpperCase() === "OK")).map(r => ({
     id: String(r[0]), level: String(r[1]), name: String(r[2]).replace(/^'/, ""),
     secs: Number(r[3]) || 0, errors: Number(r[4]) || 0, hints: Number(r[5]) || 0,
     at: Number(r[6]) || 0, debug: r[7] === true || String(r[7]).toUpperCase() === "TRUE"
@@ -61,8 +67,9 @@ function doPost(e) {
       const at = int_(x.at, 9e15) || Date.now();
       const ids = rows_(sh).map(r => String(r[0]));
       if (ids.indexOf(id) >= 0) return json_({ ok: true, duplicate: true });
-      sh.appendRow([id, x.level, name, secs, errors, hints, at, !!x.debug]);
-      return json_({ ok: true });
+      const review = !x.debug && secs < MIN_SECS_PER_CELL * EMPTY[x.level];
+      sh.appendRow([id, x.level, name, secs, errors, hints, at, !!x.debug, review ? REVIEW : ""]);
+      return json_({ ok: true, review: review });
     }
 
     if (d.action === "reset" || d.action === "resetDebug") {
