@@ -170,6 +170,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tbl .legend { margin: 8px 0 0; font-size: 0.8rem; color: var(--muted); }
 .tbl .legend b { color: var(--bad); font-weight: 600; }
 .dbg { color: var(--learn); font-weight: 700; }
+.env-dbg { font-size: 0.4em; color: var(--learn); vertical-align: middle; }
+.env-dbg[hidden] { display: none; }
 .dbg-reset { display: grid; gap: 8px; justify-items: start; padding-left: 28px; max-width: 460px; }
 .dbg-reset .confirm { justify-self: stretch; }
 .dbg-msg { font-size: 0.85rem; color: var(--muted); }
@@ -214,7 +216,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 <div class="wrap">
   <header>
-    <h1>Sudoku<span>.</span> <small style="font-size:0.4em;color:#c0392b;vertical-align:middle">TEST</small></h1>
+    <h1>Sudoku<span>.</span> <small style="font-size:0.4em;color:#c0392b;vertical-align:middle">TEST</small> <small class="env-dbg" id="env-dbg" hidden>DEBUG</small></h1>
     <div class="hdr-right">
     <button type="button" class="gear gear-start" id="newgame" data-i18n="btn.new">Nová hra</button>
     <button type="button" class="gear" id="pause" aria-label="Pauza"><span class="pl-txt" id="pause-txt">Pauza</span><svg class="pl-ico ico-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect><rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect></svg><svg class="pl-ico ico-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4L5.7 2.1a.8.8 0 0 0-1.2.7z"></path></svg></button>
@@ -286,6 +288,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         </div>
         <span class="dbg-msg" id="all-msg" aria-live="polite"></span>
       </div>
+      <div class="dbg-reset">
+        <button type="button" class="btn" id="dbg-lock" data-i18n="dbg.lock">Odhlásit Debug</button>
+        <small class="dbg-msg" data-i18n="dbg.lock.d">Kód je uložený v tomto prohlížeči. Odhlášením ho z něj smažeš.</small>
+      </div>
       </fieldset>
     </fieldset>
     <button type="button" class="btn primary" id="settings-close" data-i18n="settings.close">Zavřít nastavení</button>
@@ -348,7 +354,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </div>
 <script src="lang/cs.js"></script>
 <script src="lang/en.js"></script>
-<script src="zebricek.js"></script>
 <script src="config.js"></script>
 <script>
 (() => {
@@ -357,8 +362,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const PRISTINE = [...document.body.children].filter(n =>
     ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
   ).map(n => n.outerHTML);
-  const EMBED = (window.SUDOKU_EMBED && typeof window.SUDOKU_EMBED === "object" && window.SUDOKU_EMBED.results) || {};
-  const EMBED_REV = String((window.SUDOKU_EMBED && window.SUDOKU_EMBED.savedAt) || 0);
+  // Se společným žebříčkem se výsledky ze souboru zebricek.js nepoužívají: když se nepodaří načíst
+  // Google tabulku, zobrazí se jen výsledky z tohoto prohlížeče (u nového hráče prázdný seznam).
+  const SHARED = !!String((window.SUDOKU_CONFIG && window.SUDOKU_CONFIG.scoresUrl) || "").trim();
+  // Stará záloha žebříčku (zebricek.js) už není potřeba – data jsou v Google tabulce; uklidí se i její stopy v prohlížeči.
+  try { ["sudoku-test-embed-nodebug", "sudoku-test-embed-hidden"].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  const EMBED = (!SHARED && window.SUDOKU_EMBED && typeof window.SUDOKU_EMBED === "object" && window.SUDOKU_EMBED.results) || {};
+  const EMBED_REV = SHARED ? "0" : String((window.SUDOKU_EMBED && window.SUDOKU_EMBED.savedAt) || 0);
 
   // ---------- jazyky ----------
   // Každý jazyk je v souboru lang/<kód>.js a registruje se do window.SUDOKU_LANGS.
@@ -485,7 +495,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   }
   function setRunning(r) { running = r && !S.done; render(); save(); if (running && sel >= 0) cells[sel].focus(); }
   const OPT = { peers: false, same: false, autonotes: false, warn: false, dup: false, lock: false, count: false, sound: true, volume: 5, learn: false, learnDelay: 5, pen: true, erase: true, unit: true, debug: false, lang: "cs" };
-  let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (jen pro toto načtení stránky).
+  let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (kód se pamatuje v tomto prohlížeči, dokud se Debug nezamkne).
   const solvedDigit = v => S.val.reduce((n, x, i) => n + (x === v && S.sol[i] === v), 0) === 9;
   try { Object.assign(OPT, JSON.parse(localStorage.getItem("sudoku-test-settings")) || {}); } catch (e) {}
   const saveOpt = () => { try { localStorage.setItem("sudoku-test-settings", JSON.stringify(OPT)); } catch (e) {} };
@@ -728,10 +738,23 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         const m = {}; for (const k of Object.keys(DIFF)) m[k] = [];
         for (const row of d.results) if (row && m[row.level]) m[row.level].push(row);
         REMOTE = m;
+        try { localStorage.setItem("sudoku-test-remote", JSON.stringify({ at: Date.now(), m })); } catch (e) {}
         setNote(PENDING.length && !flushing ? t("remote.pending") : t("remote.ok"));
         renderTop();
         return true;
-      } catch (e) { if (!REMOTE) setNote(t("remote.fail")); return false; }
+      } catch (e) {
+        if (!REMOTE) {
+          // Záloha: naposledy úspěšně načtený společný žebříček z tohoto prohlížeče; jinak jen místní výsledky.
+          let c = null; try { c = JSON.parse(localStorage.getItem("sudoku-test-remote")); } catch (err) {}
+          if (c && c.m && typeof c.m === "object") {
+            const m = {}; for (const k of Object.keys(DIFF)) m[k] = Array.isArray(c.m[k]) ? c.m[k] : [];
+            REMOTE = m; renderTop();
+            const df = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+            setNote(t("remote.cached", { t: df.format(c.at || Date.now()) }));
+          } else setNote(t("remote.fail"));
+        }
+        return false;
+      }
       finally {
         remoteBusy = null;
         if (remoteAgain) { remoteAgain = false; setTimeout(remoteLoad, 0); }
@@ -943,14 +966,28 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     }
     return H.map(v => (v >>> 0).toString(16).padStart(8, "0")).join("");
   }
+  const DBG_STORE = "sudoku-test-dbg";
+  function dbgUnlock(code) {
+    if (sha256("sudoku-dbg:" + code) !== DBG_HASH) return false;
+    dbgUnlocked = true; dbgCode = code; setTimeout(loadReview, 0); $("env-dbg").hidden = false;
+    try { localStorage.setItem(DBG_STORE, code); } catch (e) {}
+    $("dbg-key").value = ""; $("dbg-key").hidden = true;
+    $("dbg-panel").disabled = false; $("dbg-panel").hidden = false;
+    return true;
+  }
   $("dbg-key").addEventListener("keydown", e => {
     if (e.key !== "Enter" || dbgUnlocked) return;
     e.preventDefault();
-    if (sha256("sudoku-dbg:" + $("dbg-key").value) !== DBG_HASH) { $("dbg-key").value = ""; return; }
-    dbgUnlocked = true; dbgCode = $("dbg-key").value; setTimeout(loadReview, 0);
-    $("dbg-key").value = ""; $("dbg-key").hidden = true;
-    $("dbg-panel").disabled = false; $("dbg-panel").hidden = false;
+    if (!dbgUnlock($("dbg-key").value)) $("dbg-key").value = "";
   });
+  $("dbg-lock").addEventListener("click", () => {
+    try { localStorage.removeItem(DBG_STORE); } catch (e) {}
+    dbgUnlocked = false; dbgCode = ""; REVIEWQ = []; reviewSeq++; reviewLoading = false; $("env-dbg").hidden = true;
+    $("dbg-panel").disabled = true; $("dbg-panel").hidden = true; $("dbg-key").hidden = false;
+    renderReview(); render();
+  });
+  // Uložený kód z dřívějška odemkne Debug hned po načtení (neplatný se smaže).
+  try { const c = localStorage.getItem(DBG_STORE); if (c && !dbgUnlock(c)) localStorage.removeItem(DBG_STORE); } catch (e) {}
 
   // ---------- Debug: smazání výsledků s hvězdičkou ----------
   function countDebug() {
