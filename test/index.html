@@ -335,6 +335,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 <script src="lang/cs.js"></script>
 <script src="lang/en.js"></script>
 <script src="zebricek.js"></script>
+<script src="config.js"></script>
 <script>
 (() => {
   // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro uložení stránky i se žebříčkem).
@@ -672,8 +673,57 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const setNote = t => { $("top-note").textContent = t; };
   const sharedNote = () => "Společná tabulka všech hráčů. Výsledky se ukládají a načítají automaticky.";
+
+  // ---------- společný žebříček (Google tabulka přes Apps Script) ----------
+  // Adresa se nastavuje v config.js. Bez ní se žebříček ukládá jen v prohlížeči.
+  const CFG = window.SUDOKU_CONFIG || {};
+  const SCORES_URL = String(CFG.scoresUrl || "").trim();
+  const SCORES_SHEET = String(CFG.scoresSheet || "");
+  let dbgCode = "", remoteBusy = null;
+  let PENDING = [];
+  try { PENDING = JSON.parse(localStorage.getItem("sudoku-test-pending")) || []; } catch (e) {}
+  const savePending = () => { try { localStorage.setItem("sudoku-test-pending", JSON.stringify(PENDING)); } catch (e) {} };
+  async function remotePost(payload) {
+    // text/plain = jednoduchý požadavek bez CORS preflightu, Apps Script ho přijme
+    const r = await fetch(SCORES_URL, { method: "POST", body: JSON.stringify({ ...payload, sheet: SCORES_SHEET }) });
+    const d = await r.json();
+    if (!d || !d.ok) throw new Error((d && d.error) || "fail");
+    return d;
+  }
+  async function flushPending() {
+    if (!SCORES_URL || !PENDING.length) return;
+    const left = [];
+    for (const e of PENDING.slice()) { try { await remotePost({ action: "add", entry: e }); } catch (err) { left.push(e); } }
+    PENDING = left; savePending();
+    if (left.length) setNote(t("remote.pending"));
+  }
+  function remoteLoad() {
+    if (!SCORES_URL) return Promise.resolve(false);
+    if (remoteBusy) return remoteBusy;
+    if (!REMOTE) setNote(t("remote.loading"));
+    remoteBusy = (async () => {
+      try {
+        const url = SCORES_URL + (SCORES_URL.includes("?") ? "&" : "?") + "sheet=" + encodeURIComponent(SCORES_SHEET) + "&t=" + Date.now();
+        const d = await (await fetch(url)).json();
+        if (!d || !Array.isArray(d.results)) throw new Error("format");
+        const m = {}; for (const k of Object.keys(DIFF)) m[k] = [];
+        for (const row of d.results) if (row && m[row.level]) m[row.level].push(row);
+        REMOTE = m;
+        setNote(PENDING.length ? t("remote.pending") : t("remote.ok"));
+        renderTop();
+        return true;
+      } catch (e) { if (!REMOTE) setNote(t("remote.fail")); return false; }
+      finally { remoteBusy = null; }
+    })();
+    return remoteBusy;
+  }
   function boardList(lv) {
     let src = REMOTE && REMOTE[lv] ? REMOTE[lv] : (TOP[lv] || []);
+    if (REMOTE && REMOTE[lv]) {
+      // výsledky, které ještě čekají na odeslání do společného žebříčku
+      const ids = new Set(src.map(r => String(r.id)));
+      src = src.concat(PENDING.filter(r => r.level === lv && !ids.has(String(r.id))));
+    }
     if (!(REMOTE && REMOTE[lv]) && Array.isArray(EMBED[lv])) {
       // Stejný výsledek v prohlížeči i v souboru: přednost má ten se jménem.
       const named = new Map(EMBED[lv].filter(r => r && r.name).map(r => [String(r.id), r.name]));
@@ -713,16 +763,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     try { localStorage.setItem("sudoku-test-name", name); } catch (err) {}
     resultOpen = false; lastId = entry.id; render();
     TOP[entry.level] = (TOP[entry.level] || []).concat(entry).sort(byRank).slice(0, 25); saveTop();
-    if (dbNs) {
-      const { id, ...body } = entry;
-      if (REMOTE && REMOTE[entry.level]) REMOTE = { ...REMOTE, [entry.level]: REMOTE[entry.level].concat(entry) };
-      renderTop();
-      try { await dbNs.collection("results").doc(id).set(body); setNote(sharedNote()); }
-      catch (err) {
-        setNote(err && err.code === "invalid_argument"
-          ? "Výsledek se do společné tabulky neuložil, protože nemáš oprávnění zapisovat. Požádej autora hry o přístup Contributor. V tomto prohlížeči zůstal uložený."
-          : "Výsledek se do společné tabulky zatím neuložil, zkus hru znovu načíst. V tomto prohlížeči zůstal uložený.");
-      }
+    if (SCORES_URL) {
+      PENDING.push(entry); savePending();
+      flushPending().then(remoteLoad);
     }
     showTop(entry.level);
     setStatus(t("msg.saved", { n: name }), "win");
@@ -769,7 +812,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const n = countAll();
     $("all-msg").textContent = "";
     if (!n) { $("all-msg").textContent = t("all.empty"); return; }
-    $("all-question").textContent = t("all.q", { n, res: tp(n, "pl.results") });
+    $("all-question").textContent = t(SCORES_URL ? "all.qRemote" : "all.q", { n, res: tp(n, "pl.results") });
     $("all-confirm").hidden = false; $("all-reset").hidden = true;
   });
   $("all-no").addEventListener("click", () => { $("all-confirm").hidden = true; $("all-reset").hidden = false; });
@@ -779,17 +822,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     let removed = countAll(), failed = 0;
     TOP = {}; saveTop(); lastId = null;
     try { localStorage.setItem("sudoku-test-embed-hidden", EMBED_REV); } catch (e) {}
-    if (dbNs) {
-      removed = 0; $("all-msg").textContent = t("deleting");
-      try {
-        let snap;
-        do {
-          snap = await dbNs.collection("results").limit(500).get();
-          let ok = 0;
-          for (const d of snap.docs) { try { await dbNs.doc("results/" + d.id).delete(); removed++; ok++; } catch (e) { failed++; } }
-          if (!ok) break;
-        } while (snap.size === 500);
-      } catch (e) { failed++; }
+    if (SCORES_URL) {
+      $("all-msg").textContent = t("deleting");
+      try { const d = await remotePost({ action: "reset", key: dbgCode }); removed = d.removed || 0; PENDING = []; savePending(); await remoteLoad(); }
+      catch (e) { $("all-msg").textContent = t(String(e.message) === "denied" ? "remote.denied" : "remote.fail"); return; }
     }
     renderTop(); saveToFile();
     $("all-msg").textContent = failed
@@ -828,7 +864,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (e.key !== "Enter" || dbgUnlocked) return;
     e.preventDefault();
     if (sha256("sudoku-dbg:" + $("dbg-key").value) !== DBG_HASH) { $("dbg-key").value = ""; return; }
-    dbgUnlocked = true;
+    dbgUnlocked = true; dbgCode = $("dbg-key").value;
     $("dbg-key").value = ""; $("dbg-key").hidden = true;
     $("dbg-panel").disabled = false; $("dbg-panel").hidden = false;
   });
@@ -858,15 +894,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     for (const k in TOP) { const b = (TOP[k] || []).length; TOP[k] = (TOP[k] || []).filter(r => !r.debug); removed += b - TOP[k].length; }
     saveTop();
     try { localStorage.setItem("sudoku-test-embed-nodebug", EMBED_REV); } catch (e) {}
-    if (dbNs) {
-      removed = 0;
+    if (SCORES_URL) {
       $("dbg-msg").textContent = t("deleting");
-      try {
-        const snap = await dbNs.collection("results").where("debug", "==", true).get();
-        for (const d of snap.docs) {
-          try { await dbNs.doc("results/" + d.id).delete(); removed++; } catch (e) { failed++; }
-        }
-      } catch (e) { failed++; }
+      try { const d = await remotePost({ action: "resetDebug", key: dbgCode }); removed = d.removed || 0; PENDING = PENDING.filter(r => !r.debug); savePending(); await remoteLoad(); }
+      catch (e) { $("dbg-msg").textContent = t(String(e.message) === "denied" ? "remote.denied" : "remote.fail"); return; }
     }
     renderTop(); saveToFile();
     $("dbg-msg").textContent = failed
@@ -920,7 +951,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     else if (!name && resumeAfterPanel) { resumeAfterPanel = false; setRunning(true); }
   }
   const setSettings = open => setPanel(open ? "settings" : null);
-  function showTop(lv) { topLv = lv; renderTop(); setPanel("top"); }
+  function showTop(lv) { topLv = lv; renderTop(); setPanel("top"); remoteLoad(); }
   $("topbtn").addEventListener("click", () => { if ($("top").hidden) showTop(S ? S.level : level); else setPanel(null); });
   $("top-close").addEventListener("click", () => setPanel(null));
   // Nová hra: výběr obtížnosti přes hrací plochu; běžící hru pozastaví, Zpět do hry ji vrátí.
@@ -1237,6 +1268,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (data && data.panel) { lastId = data.lastId || null; if (data.panel === "top") showTop(data.topLv || S.level); else setPanel("settings"); resumeAfterPanel = !!data.resume && !S.done; }
   }
   applyLang(); $("s-lang").value = OPT.lang;
+  if (SCORES_URL) flushPending().then(remoteLoad);
   fitHeader();
   window.claude?.hot?.snapshot?.(() => ({ S, level, sel, running, panel: !$("top").hidden ? "top" : !$("settings").hidden ? "settings" : null, topLv, lastId, resume: resumeAfterPanel }));
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
