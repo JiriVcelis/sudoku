@@ -38,14 +38,12 @@ html { scrollbar-gutter: stable; overflow-y: scroll; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 40px; }
 .wrap { max-width: 920px; margin: 0 auto; display: grid; gap: 20px; }
-header { display: grid; gap: 14px; }
+header { display: grid; gap: 14px; margin-bottom: -10px; } /* menší mezera mezi hlavičkou a plochou */
 h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2rem, 5vw, 2.8rem); letter-spacing: -0.02em; margin: 0; line-height: 1; }
 h1 span { color: var(--accent); }
 .meta { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .meta b { color: var(--ink); font-weight: 600; font-family: var(--f-digit); }
 /* Pevné šířky hodnot, aby se hlavička neposouvala při změně obtížnosti nebo počtu chyb. */
-#m-diff { display: inline-block; min-width: 11ch; }
-#m-err { display: inline-block; min-width: 2ch; }
 
 .main { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 28px; align-items: start; }
 @media (max-width: 720px) { .main { grid-template-columns: minmax(0, 1fr); } }
@@ -109,6 +107,12 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .learn-badge { color: var(--learn); font-weight: 600; white-space: nowrap; }
 /* Odznaky drží své místo i když nesvítí, aby hlavička neposkakovala. */
 .learn-badge.off { visibility: hidden; }
+.learn-badge.gone { display: none; }
+/* Zkratky odznaků, když se na řádek nevejdou celé názvy. */
+.learn-badge .b-abbr { display: none; }
+.meta.short .learn-badge .b-full { display: none; }
+.meta.short { column-gap: 12px; }
+.meta.short .learn-badge .b-abbr { display: inline; font-size: 0.75rem; padding: 0 4px; border: 1px solid currentColor; border-radius: 4px; }
 .ghost { color: var(--muted); opacity: 0.5; font-weight: 400; }
 @media (prefers-reduced-motion: reduce) { .cell.learn { animation: none; } }
 .hint-keys { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
@@ -125,6 +129,12 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .gear { font: 600 0.85rem var(--f-body); padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
 #pause { min-width: 8em; text-align: center; }
 .gear:disabled { opacity: 0.45; cursor: default; }
+/* Když se tlačítka nevejdou do řádku, Pauza/Pokračovat se zobrazí jako ikona. */
+#pause .pl-ico { display: none; width: 16px; height: 16px; fill: currentColor; vertical-align: middle; }
+.hdr-right.compact #pause { min-width: 0; padding-inline: 11px; }
+.hdr-right.compact #pause .pl-txt { display: none; }
+.hdr-right.compact #pause:not(.is-paused) .ico-pause { display: inline-block; }
+.hdr-right.compact #pause.is-paused .ico-play { display: inline-block; }
 .gear.gear-start { background: var(--accent); border-color: var(--accent); color: var(--paper); }
 .gear[aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .settings { display: grid; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
@@ -141,6 +151,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .vol.off { opacity: 0.45; }
 .opt.sub { padding-left: 28px; }
 .opt.off { opacity: 0.45; cursor: default; }
+.lang-row { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; }
+.lang-row select { font: 500 0.95rem var(--f-body); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
 .opt small { display: block; color: var(--muted); font-size: 0.8rem; }
 .gear#topbtn[aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -176,6 +188,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .name-row input { flex: 1 1 180px; min-width: 0; font: 500 1rem var(--f-body); padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
 .name-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .name-row .btn { padding: 9px 14px; }
+/* Tlačítka Zapsat a Nezapisovat drží pohromadě; když se nevejdou vedle pole, spadnou spolu na další řádek. */
+.name-btns { display: flex; gap: 8px; flex: 0 0 auto; }
 .name-err { color: var(--bad); font-size: 0.85rem; min-height: 0; }
 .name-err:empty { display: none; }
 .top-note { margin: 0; font-size: 0.8rem; color: var(--muted); }
@@ -190,138 +204,165 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   <header>
     <h1>Sudoku<span>.</span></h1>
     <div class="hdr-right">
-    <button type="button" class="gear gear-start" id="newgame">Nová hra</button>
-    <button type="button" class="gear" id="pause">Pauza</button>
-    <button type="button" class="gear" id="share">Sdílej</button>
-    <button type="button" class="gear" id="topbtn" aria-expanded="false" aria-controls="top">Žebříček</button>
-    <button type="button" class="gear" id="gear" aria-expanded="false" aria-controls="settings">Nastavení</button>
+    <button type="button" class="gear gear-start" id="newgame" data-i18n="btn.new">Nová hra</button>
+    <button type="button" class="gear" id="pause" aria-label="Pauza"><span class="pl-txt" id="pause-txt">Pauza</span><svg class="pl-ico ico-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect><rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect></svg><svg class="pl-ico ico-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4L5.7 2.1a.8.8 0 0 0-1.2.7z"></path></svg></button>
+    <button type="button" class="gear" id="topbtn" aria-expanded="false" aria-controls="top" data-i18n="btn.top">Žebříček</button>
+    <button type="button" class="gear" id="gear" aria-expanded="false" aria-controls="settings" data-i18n="btn.settings">Nastavení</button>
     </div>
     <div class="meta">
-      <span>Obtížnost: <b id="m-diff">Střední</b></span>
-      <span>Čas: <b id="m-time">00:00</b></span>
-      <span>Chyby: <b id="m-err">0</b></span>
-      <span class="learn-badge off" id="m-learn" title="Hra s režimem Učení se nezapisuje do žebříčku">Učení</span>
-      <span class="learn-badge off" id="m-debug" title="Debug mód: výsledek se zapíše s hvězdičkou">Debug *</span>
+      <span><span data-i18n="meta.diff">Obtížnost:</span> <b id="m-diff">Střední</b></span>
+      <span><span data-i18n="meta.time">Čas:</span> <b id="m-time">00:00</b></span>
+      <span><span data-i18n="meta.errors">Chyby:</span> <b id="m-err">0</b></span>
+      <span class="learn-badge off gone" id="m-learn" title="Učení: hra se nezapisuje do žebříčku" data-i18n-title="badge.learn.title"><span class="b-full" data-i18n="badge.learn">Učení</span><span class="b-abbr" data-i18n="badge.learn.abbr">U</span></span>
+      <span class="learn-badge off gone" id="m-debug" title="Debug mód: výsledek se zapíše s hvězdičkou" data-i18n-title="badge.debug.title"><span class="b-full" data-i18n="badge.debug">Debug *</span><span class="b-abbr" data-i18n="badge.debug.abbr">D</span></span>
     </div>
   </header>
 
-  <section class="settings" id="settings" hidden="" aria-label="Nastavení">
-    <h2>Nastavení</h2>
+  <section class="settings" id="settings" hidden="" aria-label="Nastavení" data-i18n-aria="settings.title">
+    <h2 data-i18n="settings.title">Nastavení</h2>
     <fieldset>
-      <legend class="label">Zvuky</legend>
-      <label class="opt"><input type="checkbox" id="s-sound"><span>Zapnout zvuky<small>Po vyřešení sudoku zahraje vítěznou melodii.</small></span></label>
-      <div class="vol" id="vol-row">
-        <label for="s-volume">Hlasitost</label>
-        <input type="range" id="s-volume" min="1" max="10" step="1">
-        <output id="vol-out" for="s-volume">6</output>
-      </div>
-      <label class="opt sub" id="pen-row"><input type="checkbox" id="s-pen"><span>Zvuk zápisu<small>Při zapsání čísla nebo poznámky zazní krátký jemný tón. Každá číslice má svůj.</small></span></label>
-      <label class="opt sub" id="erase-row"><input type="checkbox" id="s-erase"><span>Zvuk mazání<small>Při smazání čísla nebo poznámek zazní krátký klesající tón.</small></span></label>
-      <label class="opt sub" id="unit-row"><input type="checkbox" id="s-unit"><span>Zvuk dokončení řádku, sloupce a čtverce<small>Když doplníš celý řádek, sloupec nebo čtverec, zazní krátká zvonivá melodie. S vypnutým upozorněním na špatné číslo zazní i při chybě, aby zvuk nic neprozradil. Při více najednou je bohatší.</small></span></label>
+      <legend class="label" data-i18n="sec.game">Hra</legend>
+      <label class="lang-row" for="s-lang"><span data-i18n="set.lang">Jazyk</span><select id="s-lang"></select></label>
     </fieldset>
     <fieldset>
-      <legend class="label">Nápověda</legend>
-      <label class="opt"><input type="checkbox" id="s-learn"><span>Učení<small>Po nastavené době bez akce zvýrazní pole a zašedle v něm ukáže číslo, které tam patří. Hra, ve které je Učení zapnuté, se nezapisuje do žebříčku.</small></span></label>
+      <legend class="label" data-i18n="sec.sound">Zvuky</legend>
+      <label class="opt"><input type="checkbox" id="s-sound"><span><span data-i18n="set.sound">Zapnout zvuky</span><small data-i18n="set.sound.d">Po vyřešení sudoku zahraje vítěznou melodii.</small></span></label>
+      <div class="vol" id="vol-row">
+        <label for="s-volume" data-i18n="set.volume">Hlasitost</label>
+        <input type="range" id="s-volume" min="1" max="10" step="1">
+        <output id="vol-out" for="s-volume">5</output>
+      </div>
+      <label class="opt sub" id="pen-row"><input type="checkbox" id="s-pen"><span><span data-i18n="set.pen">Zvuk zápisu</span><small data-i18n="set.pen.d">Při zapsání čísla nebo poznámky zazní krátký jemný tón. Každá číslice má svůj.</small></span></label>
+      <label class="opt sub" id="erase-row"><input type="checkbox" id="s-erase"><span><span data-i18n="set.erase">Zvuk mazání</span><small data-i18n="set.erase.d">Při smazání čísla nebo poznámek zazní krátký klesající tón.</small></span></label>
+      <label class="opt sub" id="unit-row"><input type="checkbox" id="s-unit"><span><span data-i18n="set.unit">Zvuk dokončení řádku, sloupce a čtverce</span><small data-i18n="set.unit.d">Když doplníš celý řádek, sloupec nebo čtverec, zazní krátká zvonivá melodie. S vypnutým upozorněním na špatné číslo zazní i při chybě, aby zvuk nic neprozradil. Při více najednou je bohatší.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend class="label" data-i18n="sec.help">Nápověda</legend>
+      <label class="opt"><input type="checkbox" id="s-learn"><span><span data-i18n="set.learn">Učení</span><small data-i18n="set.learn.d">Po nastavené době bez akce zvýrazní pole a zašedle v něm ukáže číslo, které tam patří. Hra, ve které je Učení zapnuté, se nezapisuje do žebříčku.</small></span></label>
       <div class="vol" id="learn-row">
-        <label for="s-learn-delay">Nápověda po</label>
+        <label for="s-learn-delay" data-i18n="set.learnDelay">Nápověda po</label>
         <input type="range" id="s-learn-delay" min="1" max="15" step="1">
         <output id="learn-out" for="s-learn-delay">5 s</output>
       </div>
-      <label class="opt"><input type="checkbox" id="s-peers"><span>Zvýrazňovat řádky a sloupce<small>Podbarví řádek, sloupec a čtverec vybraného pole.</small></span></label>
-      <label class="opt"><input type="checkbox" id="s-same"><span>Zvýrazňovat stejné číslice<small>Po kliknutí na pole s číslem podbarví všechna stejná čísla na ploše.</small></span></label>
-      <label class="opt"><input type="checkbox" id="s-autonotes"><span>Automaticky odstraňovat poznámky<small>Po zapsání čísla ho smaže z poznámek ve stejném řádku, sloupci a čtverci.</small></span></label>
-      <label class="opt"><input type="checkbox" id="s-warn"><span>Upozornit na špatně zadané číslo<small>Číslo, které nepatří do řešení, se hned označí červeně a zobrazí se upozornění.</small></span></label>
-      <label class="opt"><input type="checkbox" id="s-dup"><span>Upozornit na duplicitní číslo<small>Označí čísla, která se opakují ve stejném řádku, sloupci nebo čtverci.</small></span></label>
-      <label class="opt"><input type="checkbox" id="s-count"><span>Ukazovat, kolik čísel zbývá<small>Na číselné klávesnici zobrazí u každé číslice, kolikrát ještě chybí na ploše.</small></span></label>
-      <label class="opt"><input type="checkbox" id="s-lock"><span>Zamykat vyčerpaná čísla<small>Když je číslice správně doplněná na všech devíti místech, deaktivuje se a nedá se dál zapsat ani přidat do poznámek.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-allhelp"><span><span data-i18n="set.allHelp">Všechny nápovědy</span><small data-i18n="set.allHelp.d">Zapne nebo vypne všechny nápovědy níže najednou.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-peers"><span><span data-i18n="set.peers">Zvýrazňovat řádky a sloupce</span><small data-i18n="set.peers.d">Podbarví řádek, sloupec a čtverec vybraného pole.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-same"><span><span data-i18n="set.same">Zvýrazňovat stejné číslice</span><small data-i18n="set.same.d">Po kliknutí na pole s číslem podbarví všechna stejná čísla na ploše.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-autonotes"><span><span data-i18n="set.autonotes">Automaticky odstraňovat poznámky</span><small data-i18n="set.autonotes.d">Po zapsání čísla ho smaže z poznámek ve stejném řádku, sloupci a čtverci.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-warn"><span><span data-i18n="set.warn">Upozornit na špatně zadané číslo</span><small data-i18n="set.warn.d">Číslo, které nepatří do řešení, se hned označí červeně a zobrazí se upozornění.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-dup"><span><span data-i18n="set.dup">Upozornit na duplicitní číslo</span><small data-i18n="set.dup.d">Označí čísla, která se opakují ve stejném řádku, sloupci nebo čtverci.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-count"><span><span data-i18n="set.count">Ukazovat, kolik čísel zbývá</span><small data-i18n="set.count.d">Na číselné klávesnici zobrazí u každé číslice, kolikrát ještě chybí na ploše.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-lock"><span><span data-i18n="set.lock">Zamykat vyčerpaná čísla</span><small data-i18n="set.lock.d">Když je číslice správně doplněná na všech devíti místech, deaktivuje se a nedá se dál zapsat ani přidat do poznámek.</small></span></label>
     </fieldset>
     <fieldset>
-      <legend class="label">Debug</legend>
-      <input type="password" class="dbg-key" id="dbg-key" autocomplete="off" spellcheck="false" aria-label="Kód">
+      <legend class="label" data-i18n="sec.debug">Debug</legend>
+      <input type="password" class="dbg-key" id="dbg-key" autocomplete="off" spellcheck="false" aria-label="Kód" data-i18n-aria="dbg.key">
       <fieldset class="dbg-panel" id="dbg-panel" hidden="" disabled="">
-      <label class="opt"><input type="checkbox" id="s-debug"><span>Vyplnit sudoku<small>Při nové hře vyplní celé sudoku kromě posledního pole. Výsledek se zapíše do žebříčku s hvězdičkou.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-debug"><span><span data-i18n="set.debug">Vyplnit sudoku</span><small data-i18n="set.debug.d">Při nové hře vyplní celé sudoku kromě posledního pole. Výsledek se zapíše do žebříčku s hvězdičkou.</small></span></label>
       <div class="dbg-reset">
-        <button type="button" class="btn" id="dbg-reset">Smazat debug výsledky ze žebříčku</button>
+        <button type="button" class="btn" id="dbg-reset" data-i18n="dbg.reset">Smazat debug výsledky ze žebříčku</button>
         <div class="confirm" id="dbg-confirm" hidden="">
-          <span id="dbg-question">Smazat všechny výsledky označené hvězdičkou?</span>
-          <div><button type="button" class="btn primary" id="dbg-yes">Ano, smazat</button><button type="button" class="btn" id="dbg-no">Zrušit</button></div>
+          <span id="dbg-question" data-i18n="dbg.question">Smazat všechny výsledky označené hvězdičkou?</span>
+          <div><button type="button" class="btn primary" id="dbg-yes" data-i18n="dbg.yes">Ano, smazat</button><button type="button" class="btn" id="dbg-no" data-i18n="btn.cancel">Zrušit</button></div>
         </div>
         <span class="dbg-msg" id="dbg-msg" aria-live="polite"></span>
       </div>
       <div class="dbg-reset">
-        <button type="button" class="btn" id="all-reset">Resetovat žebříček</button>
+        <button type="button" class="btn" id="all-reset" data-i18n="all.reset">Resetovat žebříček</button>
         <div class="confirm" id="all-confirm" hidden="">
-          <span id="all-question">Smazat celý žebříček?</span>
-          <div><button type="button" class="btn primary" id="all-yes">Ano, smazat vše</button><button type="button" class="btn" id="all-no">Zrušit</button></div>
+          <span id="all-question" data-i18n="all.question">Smazat celý žebříček?</span>
+          <div><button type="button" class="btn primary" id="all-yes" data-i18n="all.yes">Ano, smazat vše</button><button type="button" class="btn" id="all-no" data-i18n="btn.cancel">Zrušit</button></div>
         </div>
         <span class="dbg-msg" id="all-msg" aria-live="polite"></span>
       </div>
       </fieldset>
     </fieldset>
-    <button type="button" class="btn primary" id="settings-close">Zavřít nastavení</button>
+    <button type="button" class="btn primary" id="settings-close" data-i18n="settings.close">Zavřít nastavení</button>
   </section>
 
-  <section class="settings" id="top" hidden="" aria-label="Žebříček">
-    <h2>Žebříček</h2>
+  <section class="settings" id="top" hidden="" aria-label="Žebříček" data-i18n-aria="top.title">
+    <h2 data-i18n="top.title">Žebříček</h2>
     <div class="tabs" id="top-tabs" role="tablist"></div>
     <div class="tbl" id="top-body"></div>
-    <p class="top-note" id="top-note">Žebříček se ukládá přímo do souboru hry. Sdílej stáhne stejný soubor, jaký dostaneš stažením stránky.</p>
-    <button type="button" class="btn primary" id="top-close">Zavřít žebříček</button>
+    <p class="top-note" id="top-note" data-i18n="top.note">Žebříček se ukládá v tomto prohlížeči.</p>
+    <button type="button" class="btn primary" id="top-close" data-i18n="top.close">Zavřít žebříček</button>
   </section>
 
   <div class="main" id="main">
     <div class="board-wrap">
-      <div class="board" id="board" role="grid" aria-label="Hrací plocha sudoku"></div>
+      <div class="board" id="board" role="grid" aria-label="Hrací plocha sudoku" data-i18n-aria="board.aria"></div>
       <div class="cover" id="cover" hidden="">
         <h2 id="cover-title">Připraveno</h2>
         <p id="cover-text"></p>
         <button type="button" class="btn primary" id="go">Začít</button>
         <div class="pick" id="pick" hidden=""></div>
         <form class="name-form" id="name-form" hidden="">
-          <label for="name-input" id="name-label">Napiš jméno, pod kterým se zapíšeš.</label>
+          <label for="name-input" id="name-label" data-i18n="name.label">Napiš jméno, pod kterým se zapíšeš.</label>
           <div class="name-row">
-            <input type="text" id="name-input" maxlength="30" autocomplete="off" placeholder="Tvoje jméno">
-            <button type="submit" class="btn primary" id="name-save">Zapsat</button>
-            <button type="button" class="btn" id="name-skip">Nezapisovat</button>
+            <input type="text" id="name-input" maxlength="30" autocomplete="off" placeholder="Tvoje jméno" data-i18n-placeholder="name.placeholder">
+            <div class="name-btns">
+              <button type="submit" class="btn primary" id="name-save" data-i18n="name.save">Zapsat</button>
+              <button type="button" class="btn" id="name-skip" data-i18n="name.skip">Nezapisovat</button>
+            </div>
           </div>
           <span class="name-err" id="name-err" aria-live="polite"></span>
         </form>
-        <button type="button" class="btn primary" id="res-new" hidden="">Nová hra</button>
+        <button type="button" class="btn primary" id="res-new" hidden="" data-i18n="btn.new">Nová hra</button>
         <button type="button" class="btn" id="pick-cancel" hidden="">Zpět na výsledek</button>
       </div>
     </div>
 
     <div class="panel">
       <div class="group">
-        <span class="label">Číslo</span>
+        <span class="label" data-i18n="panel.numbers">Číslo</span>
         <div class="pad" id="pad"></div>
       </div>
 
       <div class="group">
-        <span class="label">Nástroje</span>
+        <span class="label" data-i18n="panel.tools">Nástroje</span>
         <div class="tools">
-          <button type="button" class="btn" id="notes" aria-pressed="false">Poznámky</button>
-          <button type="button" class="btn" id="undo">Zpět</button>
-          <button type="button" class="btn" id="hint">Nápověda</button>
-          <button type="button" class="btn" id="check">Zkontrolovat</button>
+          <button type="button" class="btn" id="notes" aria-pressed="false" data-i18n="tool.notes">Poznámky</button>
+          <button type="button" class="btn" id="undo" data-i18n="tool.undo">Zpět</button>
+          <button type="button" class="btn" id="hint" data-i18n="tool.hint">Nápověda</button>
+          <button type="button" class="btn" id="check" data-i18n="tool.check">Zkontrolovat</button>
         </div>
       </div>
 
       <div class="status" id="status" aria-live="polite"></div>
-      <div class="hint-keys"><kbd>1</kbd>–<kbd>9</kbd> zapsat · <kbd>Del</kbd> smazat · šipky pohyb · <kbd>N</kbd> poznámky · <kbd>P</kbd> pauza · <kbd>Ctrl</kbd>+<kbd>Z</kbd> zpět</div>
+      <div class="hint-keys" data-i18n-html="keys"><kbd>1</kbd>–<kbd>9</kbd> zapsat · <kbd>Del</kbd> smazat · šipky pohyb · <kbd>N</kbd> poznámky · <kbd>P</kbd> pauza · <kbd>Ctrl</kbd>+<kbd>Z</kbd> zpět</div>
     </div>
   </div>
 </div>
-<script id="sudoku-embed">window.SUDOKU_EMBED = {"savedAt":1792652055951,"results":{"novice":[{"id":"1792502879782-xb28","name":"Jirka","secs":80,"errors":0,"hints":0,"at":1792502879782,"debug":false},{"id":"1792501375769-x5jw","name":"Jirka","secs":94,"errors":0,"hints":0,"at":1792501375769,"debug":false},{"id":"1792503701448-mgnl","name":"Jirka","secs":115,"errors":1,"hints":0,"at":1792503701448,"debug":false}],"easy":[{"id":"1792500647934-ilem","name":"Jirka","secs":337,"errors":7,"hints":0,"at":1792500647934,"debug":false}]}};</script>
+<script src="lang/cs.js"></script>
+<script src="lang/en.js"></script>
+<script src="zebricek.js"></script>
 <script>
 (() => {
-  // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro tlačítko Sdílej).
+  // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro uložení stránky i se žebříčkem).
   const MAIN_SCRIPT = document.currentScript;
   const PRISTINE = [...document.body.children].filter(n =>
     ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
   ).map(n => n.outerHTML);
   const EMBED = (window.SUDOKU_EMBED && typeof window.SUDOKU_EMBED === "object" && window.SUDOKU_EMBED.results) || {};
   const EMBED_REV = String((window.SUDOKU_EMBED && window.SUDOKU_EMBED.savedAt) || 0);
+
+  // ---------- jazyky ----------
+  // Každý jazyk je v souboru lang/<kód>.js a registruje se do window.SUDOKU_LANGS.
+  // Nový jazyk = nový soubor + řádek <script src="lang/<kód>.js"> v index.html.
+  const LANGS = window.SUDOKU_LANGS || {};
+  const DEFAULT_LANG = "cs";
+  let L = LANGS[DEFAULT_LANG] || { t: {} };
+  function t(key, vars) {
+    let str = L.t && L.t[key];
+    if (str == null && LANGS[DEFAULT_LANG]) str = LANGS[DEFAULT_LANG].t[key];
+    if (str == null) return key;
+    return vars ? str.replace(/\{(\w+)\}/g, (m, k) => vars[k] != null ? vars[k] : m) : str;
+  }
+  // Tvar slova podle čísla: klíč obsahuje tvary oddělené "|", jazyk určí, který použít.
+  function tp(n, key) {
+    const forms = t(key).split("|");
+    const idx = L.plural ? L.plural(n) : (n === 1 ? 0 : 1);
+    return forms[Math.min(idx, forms.length - 1)];
+  }
   const DIFF = { novice: { name: "Začátečník", clues: 60, tries: 1 }, beginner: { name: "Velmi lehká", clues: 54, tries: 1 },
     easy: { name: "Lehká", clues: 48, tries: 1 }, medium: { name: "Střední", clues: 40, tries: 1 },
     hard: { name: "Těžká", clues: 32, tries: 1 }, expert: { name: "Expert", clues: 25, tries: 2 } };
@@ -410,27 +451,31 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const showCover = picking || (!running && (!S.done || resultOpen));
     $("cover").hidden = !showCover;
     boardEl.classList.toggle("covered", showCover);
-    const resText = () => `Čas ${fmt(S.secs)}` + (S.errors ? ` + ${S.errors} × 30 s = ${fmt(total(S))}` : "") +
-      ` · chyby ${S.errors} · nápovědy ${S.learned ? "∞" : S.hints}.` +
-      (S.pending ? "" : S.rankInfo === -1 ? " Hra v režimu Učení se do žebříčku nezapisuje." : S.rankInfo === 0 ? " Do žebříčku 25 nejlepších se tentokrát nevejdeš." : "");
-    $("cover-title").textContent = picking ? "Nová hra" : resultOpen ? "Vyřešeno!" : fresh ? "Připraveno" : "Pauza";
-    $("cover-text").textContent = picking ? (S.done || fresh ? "Vyber obtížnost. Hra začne hned." : "Rozehraná hra se ztratí. Vyber obtížnost, nebo se vrať do hry.") : resultOpen ? resText() : fresh ? `Obtížnost ${DIFF[S.level].name}. Čas se začne počítat po startu.` : `Hra stojí na čase ${fmt(S.secs)}.`;
+    const resText = () => t("res.time", { t: fmt(S.secs) }) + (S.errors ? t("res.penalty", { n: S.errors, t: fmt(total(S)) }) : "") +
+      t("res.stats", { e: S.errors, h: S.learned ? "∞" : S.hints }) +
+      (S.pending ? "" : S.rankInfo === -1 ? t("res.learn") : S.rankInfo === 0 ? t("res.noRank") : "");
+    $("cover-title").textContent = picking ? t("cover.new") : resultOpen ? t("cover.solved") : fresh ? t("cover.ready") : t("cover.paused");
+    $("cover-text").textContent = picking ? (S.done || fresh ? t("cover.pick") : t("cover.pickLose")) : resultOpen ? resText() : fresh ? t("cover.readyText", { d: DIFF[S.level].name }) : t("cover.pausedText", { t: fmt(S.secs) });
     $("name-form").hidden = !(resultOpen && S.pending);
     $("res-new").hidden = !(resultOpen && !S.pending);
     $("go").hidden = picking || resultOpen;
     $("pick").hidden = !picking; $("pick-cancel").hidden = !picking;
-    $("pick-cancel").textContent = S.done ? "Zpět na výsledek" : "Zpět do hry";
+    $("pick-cancel").textContent = S.done ? t("pick.backResult") : t("pick.backGame");
     $("pick").querySelectorAll("button").forEach(b => b.classList.toggle("primary", b.id === "pk-" + S.level));
-    $("go").textContent = fresh ? "Začít" : "Pokračovat";
-    $("pause").textContent = running || S.done ? "Pauza" : "Pokračovat";
+    $("go").textContent = fresh ? t("cover.go") : t("btn.resume");
+    const pLabel = running || S.done ? t("btn.pause") : t("btn.resume");
+    $("pause-txt").textContent = pLabel; $("pause").setAttribute("aria-label", pLabel); $("pause").title = pLabel;
+    $("pause").classList.toggle("is-paused", !(running || S.done));
     $("pause").disabled = !!S.done || picking;
   }
   function setRunning(r) { running = r && !S.done; render(); save(); if (running && sel >= 0) cells[sel].focus(); }
-  const OPT = { peers: true, same: true, autonotes: true, warn: true, dup: true, lock: true, count: true, sound: true, volume: 6, learn: false, learnDelay: 5, pen: true, erase: true, unit: true, debug: false };
+  const OPT = { peers: false, same: false, autonotes: false, warn: false, dup: false, lock: false, count: false, sound: true, volume: 5, learn: false, learnDelay: 5, pen: true, erase: true, unit: true, debug: false, lang: "cs" };
   let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (jen pro toto načtení stránky).
   const solvedDigit = v => S.val.reduce((n, x, i) => n + (x === v && S.sol[i] === v), 0) === 9;
   try { Object.assign(OPT, JSON.parse(localStorage.getItem("sudoku-settings")) || {}); } catch (e) {}
   const saveOpt = () => { try { localStorage.setItem("sudoku-settings", JSON.stringify(OPT)); } catch (e) {} };
+  // Dřívější výchozí hlasitost byla 6 (stejně hlasitá jako dnešní 5).
+  if (!OPT.volV2) { if (OPT.volume === 6) OPT.volume = 5; OPT.volV2 = 1; saveOpt(); }
 
   function newGame(lv) {
     level = lv;
@@ -478,10 +523,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const padBtns = [];
   for (let v = 1; v <= 9; v++) {
     const b = document.createElement("button"); b.type = "button"; b.id = "p" + v;
-    b.innerHTML = v + "<small></small>"; b.setAttribute("aria-label", "Zapsat " + v);
+    b.innerHTML = v + "<small></small>"; b.setAttribute("aria-label", t("pad.enter", { v }));
     b.addEventListener("click", () => input(v)); padEl.appendChild(b); padBtns.push(b);
   }
-  const er = document.createElement("button"); er.type = "button"; er.id = "p0"; er.textContent = "⌫"; er.setAttribute("aria-label", "Smazat");
+  const er = document.createElement("button"); er.type = "button"; er.id = "p0"; er.textContent = "⌫"; er.setAttribute("aria-label", t("pad.erase"));
   er.addEventListener("click", () => input(0)); padEl.appendChild(er);
 
   // ---------- render ----------
@@ -520,15 +565,20 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         el.innerHTML = h + "</span>";
       } else el.textContent = "";
       const r = (i / 9 | 0) + 1, c = i % 9 + 1;
-      el.setAttribute("aria-label", `Řádek ${r}, sloupec ${c}, ${v ? v : "prázdné"}${S.given[i] ? ", zadané" : ""}`);
+      el.setAttribute("aria-label", t("cell.aria", { r, c, v: v ? v : t("cell.empty") }) + (S.given[i] ? t("cell.given") : ""));
     }
     const counts = Array(10).fill(0); S.val.forEach(v => counts[v]++);
     padBtns.forEach((b, k) => { const left = 9 - counts[k + 1]; const off = OPT.lock && solvedDigit(k + 1); b.classList.toggle("done", off); b.disabled = off; b.querySelector("small").textContent = OPT.count && left > 0 ? left : ""; });
     $("m-diff").textContent = DIFF[S.level].name;
     $("m-time").textContent = fmt(S.secs);
     $("m-err").textContent = S.errors;
+    // Odznak svítí, když hra v režimu je; místo si drží jen při zapnutém nastavení (aby se nic neposouvalo),
+    // jinak nezabírá žádné místo (na úzkém displeji by jinak vznikl prázdný řádek).
     $("m-learn").classList.toggle("off", !S.learned);
+    $("m-learn").classList.toggle("gone", !S.learned && !OPT.learn);
     $("m-debug").classList.toggle("off", !S.debug);
+    $("m-debug").classList.toggle("gone", !S.debug && !OPT.debug);
+    fitMeta();
     $("notes").setAttribute("aria-pressed", notesMode);
     syncRun();
   }
@@ -537,7 +587,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   function input(v) {
     if (S.done || !running || sel < 0 || S.given[sel]) return;
     learnCell = -1;
-    if (v && OPT.lock && S.val[sel] !== v && solvedDigit(v)) { setStatus(`Číslo ${v} už je správně doplněné na všech devíti místech.`); return; }
+    if (v && OPT.lock && S.val[sel] !== v && solvedDigit(v)) { setStatus(t("msg.locked", { v })); return; }
     const prev = { i: sel, val: S.val[sel], notes: S.notes[sel] };
     if (notesMode && v) {
       if (S.val[sel]) return;
@@ -552,11 +602,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         const where = [];
         for (const p of peers[sel]) if (S.val[p] === v) {
           const pr = p / 9 | 0, pc = p % 9;
-          if (pr === r) where.push("řádku"); else if (pc === c) where.push("sloupci");
-          else if ((pr / 3 | 0) * 3 + (pc / 3 | 0) === box) where.push("čtverci");
+          if (pr === r) where.push(t("unit.row")); else if (pc === c) where.push(t("unit.col"));
+          else if ((pr / 3 | 0) * 3 + (pc / 3 | 0) === box) where.push(t("unit.box"));
         }
-        const dupMsg = OPT.dup && where.length ? `Číslo ${v} už je v tomto ${[...new Set(where)].join(" a ")}.` : "";
-        if (v !== S.sol[sel]) { setStatus(dupMsg || (OPT.warn ? "Tohle číslo sem nepatří." : ""), "warn"); }
+        const dupMsg = OPT.dup && where.length ? t("msg.dup", { v, where: [...new Set(where)].join(t("word.and")) }) : "";
+        if (v !== S.sol[sel]) { setStatus(dupMsg || (OPT.warn ? t("msg.wrong") : ""), "warn"); }
         else setStatus(dupMsg, "warn");
       }
     }
@@ -580,7 +630,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     S.history.push({ i, val: S.val[i], notes: S.notes[i] });
     S.val[i] = S.sol[i]; S.notes[i] = 0; S.hints++; unitDone(i);
     if (OPT.autonotes) for (const p of peers[i]) S.notes[p] &= ~(1 << S.sol[i]);
-    sel = i; setStatus(`Nápověda: řádek ${(i / 9 | 0) + 1}, sloupec ${i % 9 + 1} je ${S.sol[i]}.`);
+    sel = i; setStatus(t("msg.hint", { r: (i / 9 | 0) + 1, c: i % 9 + 1, v: S.sol[i] }));
     render(); checkWin(); save();
   }
   function check() {
@@ -590,8 +640,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (wrong.length) {
       wrong.forEach(k => { flag(k); cells[k].classList.add("err"); });
       $("m-err").textContent = S.errors; save();
-      setStatus(`Chybně vyplněná pole: ${wrong.length}. Zbývá doplnit ${empty}.`, "warn");
-    } else setStatus(`Zatím vše v pořádku. Zbývá doplnit ${empty} ${empty === 1 ? "pole" : empty < 5 ? "pole" : "polí"}.`);
+      setStatus(t("msg.checkWrong", { w: wrong.length, e: empty }), "warn");
+    } else setStatus(t("msg.checkOk", { e: empty, cells: tp(empty, "pl.cells") }));
   }
   function checkWin() {
     if (S.val.every((v, k) => v === S.sol[k])) {
@@ -601,8 +651,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       const rank = S.learned ? -1 : recordResult();
       S.rankInfo = rank;
       setTimeout(() => { if (S.done && !picking) { resultOpen = true; render(); showNameForm(); } }, 1800);
-      setStatus(`Vyřešeno za ${fmt(S.secs)}!` + (S.errors ? ` S trestem ${S.errors} × 30 s je výsledný čas ${fmt(total(S))}.` : "") + ` Chyby: ${S.errors}, nápovědy: ${S.learned ? "∞" : S.hints}.` +
-        (rank < 0 ? " Hra v režimu Učení se do žebříčku nezapisuje." : rank ? ` ${rank}. místo v žebříčku, napiš své jméno.` : " Do žebříčku to tentokrát nestačilo."), "win");
+      setStatus(t("msg.solved", { t: fmt(S.secs) }) + (S.errors ? t("msg.penalty", { n: S.errors, t: fmt(total(S)) }) : "") + t("msg.stats", { e: S.errors, h: S.learned ? "∞" : S.hints }) +
+        (rank < 0 ? t("res.learn") : rank ? t("msg.rank", { r: rank }) : t("msg.noRank")), "win");
       save();
     }
   }
@@ -647,7 +697,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const f = $("name-form"); f.hidden = !(S && S.pending && resultOpen);
     if (f.hidden) return;
     const rank = boardList(S.pending.level).concat(S.pending).sort(byRank).findIndex(r => r.id === S.pending.id) + 1;
-    $("name-label").textContent = `Gratulace, ${rank}. místo v obtížnosti ${DIFF[S.pending.level].name} za ${fmt(total(S.pending))}${S.pending.errors ? ` (včetně trestu za chyby)` : ""}! Napiš jméno, pod kterým se zapíšeš.`;
+    $("name-label").textContent = t("name.congrats", { r: rank, d: DIFF[S.pending.level].name, t: fmt(total(S.pending)), p: S.pending.errors ? t("name.penalty") : "" });
     $("name-err").textContent = "";
     let last = ""; try { last = localStorage.getItem("sudoku-name") || ""; } catch (e) {}
     if (!$("name-input").value) $("name-input").value = last;
@@ -656,7 +706,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   async function submitName(e) {
     e.preventDefault();
     const name = $("name-input").value.trim().replace(/\s+/g, " ").slice(0, 30);
-    if (!name) { $("name-err").textContent = "Napiš jméno, nebo zvol Nezapisovat."; return; }
+    if (!name) { $("name-err").textContent = t("name.err"); return; }
     if (!S.pending) return;
     const entry = { ...S.pending, name };
     S.pending = null; save();
@@ -675,12 +725,12 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       }
     }
     showTop(entry.level);
-    setStatus(`Zapsáno do žebříčku jako ${name}.`, "win");
+    setStatus(t("msg.saved", { n: name }), "win");
     setTimeout(saveToFile, 1600);
     requestAnimationFrame(() => { const row = document.querySelector("#top-body tr.new"); if (row) row.scrollIntoView({ block: "center", behavior: "smooth" }); });
   }
   $("name-form").addEventListener("submit", submitName);
-  $("name-skip").addEventListener("click", () => { S.pending = null; S.rankInfo = "skip"; save(); render(); setStatus("Výsledek jsi do žebříčku nezapsal."); });
+  $("name-skip").addEventListener("click", () => { S.pending = null; S.rankInfo = "skip"; save(); render(); setStatus(t("msg.skipped")); });
   $("res-new").addEventListener("click", () => openPicker());
   const tabsEl = $("top-tabs");
   for (const [k, d] of Object.entries(DIFF)) {
@@ -691,13 +741,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const lv = topLv;
     tabsEl.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.d === lv));
     const list = boardList(lv);
-    if (!list.length) { $("top-body").innerHTML = `<p class="empty">Zatím žádné dokončené hry na obtížnost ${DIFF[lv].name}.</p>`; return; }
-    const df = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
-    $("top-body").innerHTML = "<table><thead><tr><th>#</th><th>Hráč</th><th>Čas</th><th>Chyby</th><th>Nápovědy</th><th>Datum</th></tr></thead><tbody>" +
-      list.map((r, i) => `<tr class="${r.id === lastId ? "new" : ""}"><td class="r">${i + 1}.</td><td class="who">${esc(r.name || "—")}${r.debug ? '<span class="dbg" title="Debug mód"> *</span>' : ""}</td><td class="t${r.errors ? " pen" : ""}"${r.errors ? ` title="${fmt(r.secs)} + ${r.errors} × 30 s"` : ""}>${fmt(total(r))}${r.errors ? `<small>${fmt(r.secs)} + ${r.errors} × 30 s</small>` : ""}</td><td>${r.errors}</td><td>${r.hints}</td><td>${r.at ? df.format(r.at) : ""}</td></tr>`).join("") +
+    if (!list.length) { $("top-body").innerHTML = `<p class="empty">${esc(t("top.empty", { d: DIFF[lv].name }))}</p>`; return; }
+    const df = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    $("top-body").innerHTML = `<table><thead><tr><th>#</th><th>${esc(t("top.player"))}</th><th>${esc(t("top.time"))}</th><th>${esc(t("top.errors"))}</th><th>${esc(t("top.hints"))}</th><th>${esc(t("top.date"))}</th></tr></thead><tbody>` +
+      list.map((r, i) => `<tr class="${r.id === lastId ? "new" : ""}"><td class="r">${i + 1}.</td><td class="who">${esc(r.name || "—")}${r.debug ? '<span class="dbg" title="${esc(t("top.debug"))}"> *</span>' : ""}</td><td class="t${r.errors ? " pen" : ""}"${r.errors ? ` title="${fmt(r.secs)} + ${r.errors} × 30 s"` : ""}>${fmt(total(r))}${r.errors ? `<small>${fmt(r.secs)} + ${r.errors} × 30 s</small>` : ""}</td><td>${r.errors}</td><td>${r.hints}</td><td>${r.at ? df.format(r.at) : ""}</td></tr>`).join("") +
       "</tbody></table>" +
-      (list.some(r => r.errors) ? '<p class="legend"><b>Červený čas</b> obsahuje trest 30 s za každou chybu.</p>' : "") +
-      (list.some(r => r.debug) ? '<p class="legend"><span class="dbg">*</span> Hra v debug módu: sudoku bylo předvyplněné až na poslední pole.</p>' : "");
+      (list.some(r => r.errors) ? '<p class="legend">' + t("top.legendPen") + '</p>' : "") +
+      (list.some(r => r.debug) ? '<p class="legend"><span class="dbg">*</span>' + esc(t("top.legendDbg")) + '</p>' : "");
   }
 
   // ---------- Hra: reset celého žebříčku ----------
@@ -718,8 +768,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (!dbgUnlocked) return;
     const n = countAll();
     $("all-msg").textContent = "";
-    if (!n) { $("all-msg").textContent = "Žebříček je prázdný."; return; }
-    $("all-question").textContent = `Smazat celý žebříček, ${n} ${plural(n, "výsledek", "výsledky", "výsledků")} ve všech obtížnostech včetně debug? Smaže se v tomto prohlížeči a nejde to vrátit.`;
+    if (!n) { $("all-msg").textContent = t("all.empty"); return; }
+    $("all-question").textContent = t("all.q", { n, res: tp(n, "pl.results") });
     $("all-confirm").hidden = false; $("all-reset").hidden = true;
   });
   $("all-no").addEventListener("click", () => { $("all-confirm").hidden = true; $("all-reset").hidden = false; });
@@ -730,7 +780,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     TOP = {}; saveTop(); lastId = null;
     try { localStorage.setItem("sudoku-embed-hidden", EMBED_REV); } catch (e) {}
     if (dbNs) {
-      removed = 0; $("all-msg").textContent = "Mažu…";
+      removed = 0; $("all-msg").textContent = t("deleting");
       try {
         let snap;
         do {
@@ -743,8 +793,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     }
     renderTop(); saveToFile();
     $("all-msg").textContent = failed
-      ? `Smazáno ${removed}, ${failed} se smazat nepodařilo. Ke smazání ze společného žebříčku je potřeba přístup Contributor.`
-      : `Žebříček je prázdný. Počet smazaných výsledků: ${removed}.`;
+      ? t("del.failed", { r: removed, f: failed })
+      : t("all.done", { n: removed });
   });
 
   // ---------- Debug: ----------
@@ -796,8 +846,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (!dbgUnlocked) return;
     const n = countDebug();
     $("dbg-msg").textContent = "";
-    if (!n) { $("dbg-msg").textContent = "V žebříčku nejsou žádné debug výsledky."; return; }
-    $("dbg-question").textContent = `Smazat ${n} ${n === 1 ? "výsledek označený" : n < 5 ? "výsledky označené" : "výsledků označených"} hvězdičkou? Nejde to vrátit.`;
+    if (!n) { $("dbg-msg").textContent = t("dbg.none"); return; }
+    $("dbg-question").textContent = t("dbg.q", { n, res: tp(n, "pl.dbgResults") });
     $("dbg-confirm").hidden = false; $("dbg-reset").hidden = true;
   });
   $("dbg-no").addEventListener("click", () => { $("dbg-confirm").hidden = true; $("dbg-reset").hidden = false; });
@@ -810,7 +860,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     try { localStorage.setItem("sudoku-embed-nodebug", EMBED_REV); } catch (e) {}
     if (dbNs) {
       removed = 0;
-      $("dbg-msg").textContent = "Mažu…";
+      $("dbg-msg").textContent = t("deleting");
       try {
         const snap = await dbNs.collection("results").where("debug", "==", true).get();
         for (const d of snap.docs) {
@@ -820,15 +870,15 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     }
     renderTop(); saveToFile();
     $("dbg-msg").textContent = failed
-      ? `Smazáno ${removed}, ${failed} se smazat nepodařilo. Ke smazání ze společného žebříčku je potřeba přístup Contributor.`
-      : `Počet smazaných debug výsledků: ${removed}.`;
+      ? t("del.failed", { r: removed, f: failed })
+      : t("dbg.done", { n: removed });
   });
   if (!window.claude?.use && EMBED_REV !== "0") {
-    const t = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(+EMBED_REV);
-    setNote(`Kopie hry se žebříčkem uloženým ${t}. Nové výsledky se ukládají jen v tomto prohlížeči.`);
+    const when = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(+EMBED_REV);
+    setNote(t("copy.note", { t: when }));
   }
 
-  // ---------- Soubor hry: stejný dokument pro Sdílej i pro uložení stránky ----------
+  // ---------- Soubor hry: dokument pro uložení stránky i se žebříčkem ----------
   // Stejný tvar, jaký má zveřejněná stránka: kostra + obsah stránky + vložený žebříček.
   const SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
   function currentResults() {
@@ -854,28 +904,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (!artifactNs) return;
     try { await artifactNs.publish(buildDocument(currentResults(), Date.now())); }
     catch (e) {
-      if (e && (e.code === "not_granted" || e.code === "not_writer")) setNote("Žebříček je uložený jen v tomto prohlížeči, protože nemáš oprávnění hru upravovat.");
-      else if (!(e && e.code === "conflict")) setNote("Žebříček se do souboru hry teď neuložil. V tomto prohlížeči zůstal.");
+      if (e && (e.code === "not_granted" || e.code === "not_writer")) setNote(t("save.noRights"));
+      else if (!(e && e.code === "conflict")) setNote(t("save.failed"));
     }
   }
-  async function share() {
-    const html = buildExport();
-    const d = new Date(), pad = n => String(n).padStart(2, "0");
-    const filename = `Sudoku-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}.html`;
-    let dl = null;
-    try { dl = window.claude?.use ? await window.claude.use("downloads") : null; } catch (e) {}
-    if (dl) {
-      try { await dl.save({ filename, data: html }); setStatus(`Soubor ${filename} je stažený. Pošli ho komukoli, otevře se v prohlížeči se žebříčkem.`); }
-      catch (e) { setStatus(e && e.code === "declined" ? "Stažení jsi zrušil." : "Soubor se teď nepodařilo stáhnout. Zkus to za chvíli znovu.", e && e.code === "declined" ? "" : "warn"); }
-      return;
-    }
-    if (window.claude?.use) { setStatus("Stahování souborů tu není dostupné.", "warn"); return; }
-    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-    setStatus(`Soubor ${filename} je stažený.`);
-  }
-  $("share").addEventListener("click", share);
   // Otevřené Nastavení nebo žebříček schová hrací plochu a panel; běžící hru pozastaví a po zavření v ní pokračuje.
   let resumeAfterPanel = false;
   function setPanel(name) {
@@ -918,13 +950,15 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.id = "pk-" + k; b.textContent = d.name;
     b.addEventListener("click", () => {
       picking = false; level = k; $("pick").hidden = true;
-      $("cover-title").textContent = "Generuji…"; $("cover-text").textContent = "";
+      $("cover-title").textContent = t("cover.generating"); $("cover-text").textContent = "";
       setTimeout(() => { newGame(k); setRunning(true); }, 20);
     });
     $("pick").appendChild(b);
   }
   $("pick-cancel").addEventListener("click", () => { picking = false; if (pickResume && !S.done) { pickResume = false; setRunning(true); } else { if (S.done) resultOpen = !!S.pending || S.rankInfo !== undefined; render(); } });
 
+  // Hlasitost 5 = základní hlasitost zvuků (beze změny proti hlasitosti systému); 1–4 tišší, 6–10 hlasitější.
+  const volMul = () => Math.min(10, Math.max(1, +OPT.volume || 5)) / 5;
   let audioCtx = null;
   function playVictory() {
     if (!OPT.sound) return;
@@ -932,7 +966,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
       const t0 = audioCtx.currentTime + 0.05;
-      const master = audioCtx.createGain(); master.gain.value = 0.04 * Math.min(10, Math.max(1, +OPT.volume || 6)); master.connect(audioCtx.destination);
+      const master = audioCtx.createGain(); master.gain.value = 0.24 * volMul(); master.connect(audioCtx.destination);
       // C5 E5 G5 C6 … G5 C6 (fanfára) a závěrečný akord C dur
       const notes = [[523.25, 0, 0.14], [659.25, 0.14, 0.14], [783.99, 0.28, 0.14], [1046.5, 0.42, 0.3],
         [783.99, 0.78, 0.12], [1046.5, 0.92, 0.6], [523.25, 0.92, 0.9], [659.25, 0.92, 0.9], [783.99, 0.92, 0.9]];
@@ -1048,7 +1082,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
-      const vol = 0.025 * Math.min(10, Math.max(1, +OPT.volume || 6));
+      const vol = 0.15 * volMul();
       const seq = [[659.25, 783.99, 1046.5], [659.25, 783.99, 1046.5, 1318.5], [659.25, 783.99, 1046.5, 1318.5, 1568]][n - 1];
       const t0 = audioCtx.currentTime + 0.14;
       seq.forEach((f, k) => {
@@ -1066,7 +1100,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
-      const vol = 0.022 * Math.min(10, Math.max(1, +OPT.volume || 6)), t = audioCtx.currentTime + 0.005, len = 0.16;
+      const vol = 0.132 * volMul(), t = audioCtx.currentTime + 0.005, len = 0.16;
       const o = audioCtx.createOscillator(), g = audioCtx.createGain(), lp = audioCtx.createBiquadFilter();
       o.type = "sine"; o.frequency.setValueAtTime(620, t); o.frequency.exponentialRampToValueAtTime(260, t + len);
       lp.type = "lowpass"; lp.frequency.value = 1800;
@@ -1079,7 +1113,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
-      const vol = 0.03 * Math.min(10, Math.max(1, +OPT.volume || 6)) * (kind === "note" ? 0.5 : 1);
+      const vol = 0.18 * volMul() * (kind === "note" ? 0.5 : 1);
       const f = PEN_NOTES[digit] || 660, t = audioCtx.currentTime + 0.005, len = kind === "note" ? 0.18 : 0.32;
       const out = audioCtx.createGain(); out.connect(audioCtx.destination);
       out.gain.setValueAtTime(0, t);
@@ -1099,7 +1133,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       if (audioCtx.state === "suspended") audioCtx.resume();
       const t = audioCtx.currentTime + 0.02, o = audioCtx.createOscillator(), g = audioCtx.createGain();
       o.type = "triangle"; o.frequency.value = 783.99;
-      g.gain.setValueAtTime(0.04 * OPT.volume, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      g.gain.setValueAtTime(0.24 * volMul(), t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
       o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.2);
     } catch (e) {}
   }
@@ -1111,6 +1145,20 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     $(id).checked = OPT[key];
     $(id).addEventListener("change", () => { OPT[key] = $(id).checked; saveOpt(); render(); });
   });
+  // Všechny nápovědy: nadřazený přepínač pro celou sekci Nápověda.
+  const HELP_IDS = ["s-peers", "s-same", "s-autonotes", "s-warn", "s-dup", "s-count", "s-lock"];
+  function syncAllHelp() {
+    const on = HELP_IDS.filter(id => $(id).checked).length;
+    $("s-allhelp").checked = on === HELP_IDS.length;
+    $("s-allhelp").indeterminate = on > 0 && on < HELP_IDS.length;
+  }
+  HELP_IDS.forEach(id => $(id).addEventListener("change", syncAllHelp));
+  $("s-allhelp").addEventListener("change", () => {
+    const want = $("s-allhelp").checked;
+    HELP_IDS.forEach(id => { if ($(id).checked !== want) { $(id).checked = want; $(id).dispatchEvent(new Event("change")); } });
+    syncAllHelp();
+  });
+  syncAllHelp();
   $("undo").addEventListener("click", undo);
   $("hint").addEventListener("click", hint);
   $("check").addEventListener("click", check);
@@ -1134,14 +1182,62 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     }
   });
 
+  // ---------- hlavička: přepnutí Pauzy na ikonu, když se tlačítka nevejdou ----------
+  function fitHeader() {
+    const bar = document.querySelector(".hdr-right"); if (!bar) return;
+    bar.classList.remove("compact");
+    const btns = [...bar.querySelectorAll(".gear")];
+    if (btns.length && btns[btns.length - 1].offsetTop > btns[0].offsetTop + 2) bar.classList.add("compact");
+    fitMeta();
+  }
+  function fitMeta() {
+    const meta = document.querySelector(".meta"); if (!meta) return;
+    meta.classList.remove("short");
+    const items = [...meta.children].filter(e => e.offsetParent !== null);
+    if (items.length && items[items.length - 1].offsetTop > items[0].offsetTop + 2) meta.classList.add("short");
+  }
+  window.addEventListener("resize", fitHeader);
+  try { document.fonts && document.fonts.ready.then(fitHeader); } catch (e) {}
+
+  // ---------- přepnutí jazyka ----------
+  function applyLang() {
+    if (!LANGS[OPT.lang]) OPT.lang = LANGS[DEFAULT_LANG] ? DEFAULT_LANG : (Object.keys(LANGS)[0] || DEFAULT_LANG);
+    L = LANGS[OPT.lang] || L;
+    document.documentElement.lang = OPT.lang;
+    for (const k in DIFF) DIFF[k].name = t("diff." + k);
+    if (!Object.keys(LANGS).length) return; // jazykové soubory se nenačetly: zůstane výchozí čeština z HTML
+    document.querySelectorAll("[data-i18n]").forEach(e => { e.textContent = t(e.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-html]").forEach(e => { e.innerHTML = t(e.dataset.i18nHtml); });
+    document.querySelectorAll("[data-i18n-title]").forEach(e => { e.title = t(e.dataset.i18nTitle); });
+    document.querySelectorAll("[data-i18n-aria]").forEach(e => { e.setAttribute("aria-label", t(e.dataset.i18nAria)); });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(e => { e.placeholder = t(e.dataset.i18nPlaceholder); });
+    document.querySelectorAll("#top-tabs button, #pick button").forEach(b => { const k = b.dataset.d || b.id.replace(/^pk-/, ""); if (DIFF[k]) b.textContent = DIFF[k].name; });
+    padBtns.forEach((b, k) => b.setAttribute("aria-label", t("pad.enter", { v: k + 1 })));
+    er.setAttribute("aria-label", t("pad.erase"));
+    $("learn-out").textContent = OPT.learnDelay + " s";
+  }
+  (function initLangSelect() {
+    const sel = $("s-lang");
+    for (const [code, lang] of Object.entries(LANGS)) {
+      const o = document.createElement("option"); o.value = code; o.textContent = lang.name || code; sel.appendChild(o);
+    }
+    sel.value = OPT.lang;
+    sel.addEventListener("change", () => {
+      OPT.lang = sel.value; saveOpt(); applyLang(); setStatus("");
+      if (S) render(); renderTop(); fitHeader();
+    });
+  })();
+
   // ---------- boot ----------
   function start(data) {
     if (data && data.S) { S = data.S; level = data.level; sel = data.sel ?? -1; running = !!data.running; render(); startTimer(); if (S.done) { boardEl.classList.add("finished"); } }
-    else if (load()) { sel = S.done ? -1 : S.val.indexOf(0); if (S.done) boardEl.classList.add("finished"); render(); startTimer(); if (S.done) setStatus("Hra je dohraná. Novou začneš tlačítkem Start.", "win"); }
+    else if (load()) { sel = S.done ? -1 : S.val.indexOf(0); if (S.done) boardEl.classList.add("finished"); render(); startTimer(); if (S.done) setStatus(t("msg.finished"), "win"); }
     else newGame("medium");
     if (S && S.done && S.pending) { resultOpen = true; render(); showNameForm(); }
     if (data && data.panel) { lastId = data.lastId || null; if (data.panel === "top") showTop(data.topLv || S.level); else setPanel("settings"); resumeAfterPanel = !!data.resume && !S.done; }
   }
+  applyLang(); $("s-lang").value = OPT.lang;
+  fitHeader();
   window.claude?.hot?.snapshot?.(() => ({ S, level, sel, running, panel: !$("top").hidden ? "top" : !$("settings").hidden ? "settings" : null, topLv, lastId, resume: resumeAfterPanel }));
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 })();

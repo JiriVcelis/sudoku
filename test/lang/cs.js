@@ -34,6 +34,8 @@
   "set.erase.d": "Při smazání čísla nebo poznámek zazní krátký klesající tón.",
   "set.unit": "Zvuk dokončení řádku, sloupce a čtverce",
   "set.unit.d": "Když doplníš celý řádek, sloupec nebo čtverec, zazní krátká zvonivá melodie. S vypnutým upozorněním na špatné číslo zazní i při chybě, aby zvuk nic neprozradil. Při více najednou je bohatší.",
+  "set.allHelp": "Všechny nápovědy",
+  "set.allHelp.d": "Zapne nebo vypne všechny nápovědy níže najednou.",
   "sec.help": "Nápověda",
   "set.learn": "Učení",
   "set.learn.d": "Po nastavené době bez akce zvýrazní pole a zašedle v něm ukáže číslo, které tam patří. Hra, ve které je Učení zapnuté, se nezapisuje do žebříčku.",

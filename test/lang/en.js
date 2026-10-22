@@ -34,6 +34,8 @@
   "set.erase.d": "A short falling tone plays when you erase a number or notes.",
   "set.unit": "Sound for a completed row, column and box",
   "set.unit.d": "When you fill a whole row, column or box, a short chime plays. With wrong-number warnings off it plays even when there's a mistake, so the sound gives nothing away. Completing several at once makes it richer.",
+  "set.allHelp": "All assistance",
+  "set.allHelp.d": "Turns all the assistance options below on or off at once.",
   "sec.help": "Assistance",
   "set.learn": "Learning",
   "set.learn.d": "After the set time without any action, it highlights a cell and shows the right number in grey. Games with Learning turned on aren't recorded in the leaderboard.",

@@ -1,0 +1,3 @@
+// Žebříček vložený do hry (výchozí výsledky). Hra ho jen čte; nové výsledky ukládá v prohlížeči.
+// Při aktualizaci index.html tento soubor nepřepisuj.
+window.SUDOKU_EMBED = {"savedAt":1792652055951,"results":{"novice":[{"id":"1792502879782-xb28","name":"Jirka","secs":80,"errors":0,"hints":0,"at":1792502879782,"debug":false},{"id":"1792501375769-x5jw","name":"Jirka","secs":94,"errors":0,"hints":0,"at":1792501375769,"debug":false},{"id":"1792503701448-mgnl","name":"Jirka","secs":115,"errors":1,"hints":0,"at":1792503701448,"debug":false}],"easy":[{"id":"1792500647934-ilem","name":"Jirka","secs":337,"errors":7,"hints":0,"at":1792500647934,"debug":false}]}};
