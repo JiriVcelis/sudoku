@@ -679,7 +679,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const CFG = window.SUDOKU_CONFIG || {};
   const SCORES_URL = String(CFG.scoresUrl || "").trim();
   const SCORES_SHEET = String(CFG.scoresSheet || "");
-  let dbgCode = "", remoteBusy = null;
+  let dbgCode = "", remoteBusy = null, remoteAgain = false, flushing = false;
   let PENDING = [];
   try { PENDING = JSON.parse(localStorage.getItem("sudoku-test-pending")) || []; } catch (e) {}
   const savePending = () => { try { localStorage.setItem("sudoku-test-pending", JSON.stringify(PENDING)); } catch (e) {} };
@@ -692,14 +692,16 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   }
   async function flushPending() {
     if (!SCORES_URL || !PENDING.length) return;
+    flushing = true;
     const left = [];
     for (const e of PENDING.slice()) { try { await remotePost({ action: "add", entry: e }); } catch (err) { left.push(e); } }
-    PENDING = left; savePending();
+    PENDING = left; savePending(); flushing = false;
     if (left.length) setNote(t("remote.pending"));
   }
   function remoteLoad() {
     if (!SCORES_URL) return Promise.resolve(false);
-    if (remoteBusy) return remoteBusy;
+    // Probíhá-li načítání, po jeho dokončení se načte znovu (aby se ukázal i právě odeslaný výsledek).
+    if (remoteBusy) { remoteAgain = true; return remoteBusy; }
     if (!REMOTE) setNote(t("remote.loading"));
     remoteBusy = (async () => {
       try {
@@ -709,11 +711,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         const m = {}; for (const k of Object.keys(DIFF)) m[k] = [];
         for (const row of d.results) if (row && m[row.level]) m[row.level].push(row);
         REMOTE = m;
-        setNote(PENDING.length ? t("remote.pending") : t("remote.ok"));
+        setNote(PENDING.length && !flushing ? t("remote.pending") : t("remote.ok"));
         renderTop();
         return true;
       } catch (e) { if (!REMOTE) setNote(t("remote.fail")); return false; }
-      finally { remoteBusy = null; }
+      finally {
+        remoteBusy = null;
+        if (remoteAgain) { remoteAgain = false; setTimeout(remoteLoad, 0); }
+      }
     })();
     return remoteBusy;
   }
