@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='%23fbfcfb'/%3E%3Crect x='22.3' y='3' width='19.4' height='19.4' fill='%232c56c9'/%3E%3Crect x='3' y='41.7' width='19.3' height='19.3' fill='%23dfe6f7'/%3E%3Crect x='41.7' y='22.3' width='19.3' height='19.4' fill='%23dfe6f7'/%3E%3Cpath d='M22.3 3v58M41.7 3v58M3 22.3h58M3 41.7h58' stroke='%2318212b' stroke-width='3'/%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='none' stroke='%2318212b' stroke-width='4'/%3E%3Cg font-family='Arial,Helvetica,sans-serif' font-weight='700' font-size='16' text-anchor='middle'%3E%3Ctext x='12.6' y='18.4' fill='%2318212b'%3EN%3C/text%3E%3Ctext x='32' y='18.4' fill='%23fff'%3E2%3C/text%3E%3Ctext x='32' y='37.8' fill='%2318212b'%3Eb%3C/text%3E%3Ctext x='51.4' y='37.8' fill='%232c56c9'%3Ey%3C/text%3E%3Ctext x='12.6' y='57.2' fill='%232c56c9'%3E1%3C/text%3E%3Ctext x='51.4' y='57.2' fill='%2318212b'%3E8%3C/text%3E%3C/g%3E%3C/svg%3E"><link rel="apple-touch-icon" href="main-icon.png"><meta name="application-name" content="N2by Sudoku TEST"><meta name="apple-mobile-web-app-title" content="N2by Sudoku TEST"></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='%23fbfcfb'/%3E%3Crect x='22.3' y='3' width='19.4' height='19.4' fill='%232c56c9'/%3E%3Crect x='3' y='41.7' width='19.3' height='19.3' fill='%23dfe6f7'/%3E%3Crect x='41.7' y='22.3' width='19.3' height='19.4' fill='%23dfe6f7'/%3E%3Cpath d='M22.3 3v58M41.7 3v58M3 22.3h58M3 41.7h58' stroke='%2318212b' stroke-width='3'/%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='none' stroke='%2318212b' stroke-width='4'/%3E%3Cg font-family='Arial,Helvetica,sans-serif' font-weight='700' font-size='16' text-anchor='middle'%3E%3Ctext x='12.6' y='18.4' fill='%2318212b'%3EN%3C/text%3E%3Ctext x='32' y='18.4' fill='%23fff'%3E2%3C/text%3E%3Ctext x='32' y='37.8' fill='%2318212b'%3Eb%3C/text%3E%3Ctext x='51.4' y='37.8' fill='%232c56c9'%3Ey%3C/text%3E%3Ctext x='12.6' y='57.2' fill='%232c56c9'%3E1%3C/text%3E%3Ctext x='51.4' y='57.2' fill='%2318212b'%3E8%3C/text%3E%3C/g%3E%3C/svg%3E"><link rel="apple-touch-icon" href="main-icon.png"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#eef1f0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="application-name" content="N2by Sudoku TEST"><meta name="apple-mobile-web-app-title" content="N2by Sudoku TEST"></head><body>
 <title>N2by Sudoku TEST</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,6 +67,7 @@ h1 .logo { width: 0.92em; height: 0.92em; vertical-align: -0.1em; margin-right: 
 .cell.sel.err { box-shadow: inset 0 0 0 2px var(--bad); }
 .cell:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
 .notes { position: absolute; inset: 6%; display: grid; grid-template-columns: repeat(3, 1fr); font-size: clamp(0.45rem, 1.6vw, 0.66rem); color: var(--muted); font-weight: 400; }
+.board.big-notes .notes { inset: 3%; font-size: clamp(0.62rem, 2.6vw, 0.82rem); color: var(--ink); font-weight: 700; line-height: 1; } /* Větší poznámky */
 .notes i { font-style: normal; display: grid; place-items: center; line-height: 1; }
 .board.solved .cell { animation: pop .8s ease var(--d, 0ms) both; }
 @keyframes pop { 35% { background: var(--accent); color: var(--paper); transform: scale(1.1); } 100% { transform: none; } }
@@ -126,16 +127,40 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cover p { margin: 0; color: var(--muted); font-size: 0.92rem; }
 .cover .btn { padding: 13px 34px; font-size: 1.05rem; }
 .hdr-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-@media (max-width: 440px) { .hdr-right { gap: 6px; } .hdr-right .gear { padding: 7px 8px; } #pause { min-width: 6.6em; } }
+@media (max-width: 440px) { .hdr-right { gap: 6px; } .hdr-right .gear { padding: 7px 8px; } }
 .gear { font: 600 0.85rem var(--f-body); padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
-#pause { min-width: 8em; text-align: center; }
+#pause, .hdr-right .gear#pause { min-width: 0; padding-inline: 11px; line-height: 0; } /* Pauza / Pokračovat jen jako ikona */
 .gear:disabled { opacity: 0.45; cursor: default; }
 /* Když se tlačítka nevejdou do řádku, Pauza/Pokračovat se zobrazí jako ikona. */
 #pause .pl-ico { display: none; width: 16px; height: 16px; fill: currentColor; vertical-align: middle; }
-.hdr-right.compact #pause { min-width: 0; padding-inline: 11px; }
-.hdr-right.compact #pause .pl-txt { display: none; }
-.hdr-right.compact #pause:not(.is-paused) .ico-pause { display: inline-block; }
-.hdr-right.compact #pause.is-paused .ico-play { display: inline-block; }
+#pause .pl-txt { display: none; }
+#pause:not(.is-paused) .ico-pause { display: inline-block; }
+#pause.is-paused .ico-play { display: inline-block; }
+#share, .hdr-right .gear#share, #install, .hdr-right .gear#install { padding-inline: 11px; line-height: 0; }
+#install .sh-ico { width: 16px; height: 16px; vertical-align: middle; }
+.gear .g-ico { display: none; width: 16px; height: 16px; vertical-align: middle; }
+/* Když se menu nevejde na jeden řádek, Žebříček a Nastavení se zobrazí jen jako ikony. */
+.hdr-right.compact #topbtn, .hdr-right.compact #gear { padding-inline: 11px; line-height: 0; }
+.hdr-right.compact .g-txt { display: none; }
+.hdr-right.compact .g-ico { display: inline-block; }
+@media (max-width: 359px) { .hdr-right.compact { gap: 4px; } .hdr-right.compact .gear#pause, .hdr-right.compact .gear#share, .hdr-right.compact .gear#install, .hdr-right.compact .gear#topbtn, .hdr-right.compact .gear#gear { padding-inline: 8px; } .hdr-right.compact .gear-start { padding-inline: 9px; } }
+#share .sh-ico { width: 16px; height: 16px; vertical-align: middle; }
+.toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 1100; width: max-content; max-width: min(440px, calc(100vw - 32px)); box-sizing: border-box; padding: 10px 16px; border-radius: 8px; background: var(--ink); color: var(--paper); font-size: 0.9rem; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); }
+.toast[hidden] { display: none; }
+.help-back { position: fixed; inset: 0; z-index: 1050; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.35); }
+.help-back[hidden] { display: none; }
+.help-card { width: 100%; max-width: 440px; box-sizing: border-box; background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); display: grid; gap: 12px; }
+.help-card h2 { margin: 0; font: 700 1.2rem var(--f-display); }
+.help-card ol { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; line-height: 1.45; }
+.help-card .help-note { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.help-card .help-note:empty { display: none; }
+.help-card .btn { justify-self: end; }
+.update-bar { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); transform: translateX(-50%); z-index: 1060; width: max-content; max-width: min(480px, calc(100vw - 32px)); box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 10px; background: var(--ink); color: var(--paper); font-size: 0.92rem; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+.update-bar[hidden] { display: none; }
+.update-bar .btn { padding: 6px 12px; font-size: 0.85rem; }
+#update-later { background: transparent; color: var(--paper); border-color: transparent; }
+.update-bar span { flex: 1 1 auto; min-width: 0; }
+.update-bar .btn { flex: none; }
 .gear.gear-start { background: var(--accent); border-color: var(--accent); color: var(--paper); }
 .gear[aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .settings { display: grid; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
@@ -153,6 +178,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .opt.sub { padding-left: 28px; }
 .opt.off { opacity: 0.45; cursor: default; }
 .lang-row { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; }
+#m-debug { text-transform: uppercase; letter-spacing: 0.04em; } /* TESTOVÁNÍ kapitálkami */
+.lang-row > span { flex: 0 0 6.5em; } .lang-row select { min-width: 9.5em; } /* Jazyk a Vzhled: rozbalovací nabídky zarovnané pod sebou */
 .lang-row select { font: 500 0.95rem var(--f-body); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
 .opt small { display: block; color: var(--muted); font-size: 0.8rem; }
 .gear#topbtn[aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -231,21 +258,33 @@ html, body { max-width: 100%; overflow-x: hidden; }
 @media (max-width: 720px) { .board-wrap { max-width: max(260px, min(560px, calc(100svh - 340px))); margin-inline: auto; } } /* na mobilu se sudoku i čísla vejdou na obrazovku */
 </style>
 <div class="wrap">
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="update-bar" id="update-bar" role="status" hidden><span data-i18n="upd.text">Je k dispozici nová verze hry.</span><button type="button" class="btn primary" id="update-go" data-i18n="upd.go">Aktualizovat</button><button type="button" class="btn" id="update-later" aria-label="Zavřít" data-i18n-aria="btn.close">✕</button></div>
+  <div class="help-back" id="install-help" hidden>
+    <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="install-title">
+      <h2 id="install-title" data-i18n="install.title">Připni si hru – ať ji máš vždy po ruce</h2>
+      <ol id="install-steps"></ol>
+      <p class="help-note" id="install-note"></p>
+      <button type="button" class="btn primary" id="install-close" data-i18n="install.ok">Rozumím</button>
+    </div>
+  </div>
   <div class="busy-overlay" id="busy" hidden><span class="busy-spin" aria-hidden="true"></span></div>
   <header>
-    <h1><img class="logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='%23fbfcfb'/%3E%3Crect x='22.3' y='3' width='19.4' height='19.4' fill='%232c56c9'/%3E%3Crect x='3' y='41.7' width='19.3' height='19.3' fill='%23dfe6f7'/%3E%3Crect x='41.7' y='22.3' width='19.3' height='19.4' fill='%23dfe6f7'/%3E%3Cpath d='M22.3 3v58M41.7 3v58M3 22.3h58M3 41.7h58' stroke='%2318212b' stroke-width='3'/%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='none' stroke='%2318212b' stroke-width='4'/%3E%3Cg font-family='Arial,Helvetica,sans-serif' font-weight='700' font-size='16' text-anchor='middle'%3E%3Ctext x='12.6' y='18.4' fill='%2318212b'%3EN%3C/text%3E%3Ctext x='32' y='18.4' fill='%23fff'%3E2%3C/text%3E%3Ctext x='32' y='37.8' fill='%2318212b'%3Eb%3C/text%3E%3Ctext x='51.4' y='37.8' fill='%232c56c9'%3Ey%3C/text%3E%3Ctext x='12.6' y='57.2' fill='%232c56c9'%3E1%3C/text%3E%3Ctext x='51.4' y='57.2' fill='%2318212b'%3E8%3C/text%3E%3C/g%3E%3C/svg%3E" alt="">Sudoku<span>.</span> <small style="font-size:0.4em;color:#c0392b;vertical-align:middle">TEST</small> <small class="env-dbg" id="env-dbg" hidden>DEBUG</small></h1>
+    <h1><img class="logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='%23fbfcfb'/%3E%3Crect x='22.3' y='3' width='19.4' height='19.4' fill='%232c56c9'/%3E%3Crect x='3' y='41.7' width='19.3' height='19.3' fill='%23dfe6f7'/%3E%3Crect x='41.7' y='22.3' width='19.3' height='19.4' fill='%23dfe6f7'/%3E%3Cpath d='M22.3 3v58M41.7 3v58M3 22.3h58M3 41.7h58' stroke='%2318212b' stroke-width='3'/%3E%3Crect x='3' y='3' width='58' height='58' rx='9' fill='none' stroke='%2318212b' stroke-width='4'/%3E%3Cg font-family='Arial,Helvetica,sans-serif' font-weight='700' font-size='16' text-anchor='middle'%3E%3Ctext x='12.6' y='18.4' fill='%2318212b'%3EN%3C/text%3E%3Ctext x='32' y='18.4' fill='%23fff'%3E2%3C/text%3E%3Ctext x='32' y='37.8' fill='%2318212b'%3Eb%3C/text%3E%3Ctext x='51.4' y='37.8' fill='%232c56c9'%3Ey%3C/text%3E%3Ctext x='12.6' y='57.2' fill='%232c56c9'%3E1%3C/text%3E%3Ctext x='51.4' y='57.2' fill='%2318212b'%3E8%3C/text%3E%3C/g%3E%3C/svg%3E" alt="">Sudoku<span>.</span> <small style="font-size:0.4em;color:#c0392b;vertical-align:middle">TEST</small> <small class="env-dbg" id="env-dbg" hidden>ADMIN</small></h1>
     <div class="hdr-right">
     <button type="button" class="gear gear-start" id="newgame" data-i18n="btn.new">Nová hra</button>
     <button type="button" class="gear" id="pause" aria-label="Pauza"><span class="pl-txt" id="pause-txt">Pauza</span><svg class="pl-ico ico-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect><rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect></svg><svg class="pl-ico ico-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4L5.7 2.1a.8.8 0 0 0-1.2.7z"></path></svg></button>
-    <button type="button" class="gear" id="topbtn" aria-expanded="false" aria-controls="top" data-i18n="btn.top">Žebříček</button>
-    <button type="button" class="gear" id="gear" aria-expanded="false" aria-controls="settings" data-i18n="btn.settings">Nastavení</button>
+    <button type="button" class="gear" id="share" aria-label="Sdílet" title="Sdílet" data-i18n-aria="btn.share" data-i18n-title="btn.share"><svg class="sh-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 10V1.8M5 4.6l3-3 3 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5.6 6.8H4.2a1 1 0 0 0-1 1v5.4a1 1 0 0 0 1 1h7.6a1 1 0 0 0 1-1V7.8a1 1 0 0 0-1-1h-1.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></button>
+    <button type="button" class="gear" id="install" hidden aria-label="Připnout hru" title="Připnout hru" data-i18n-aria="btn.install" data-i18n-title="btn.install"><svg class="sh-ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="1.2" width="8" height="13.6" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.5"></rect><path d="M8 4.6v5.2M5.5 7.3 8 9.8l2.5-2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M6.8 12.6h2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg></button>
+    <button type="button" class="gear" id="topbtn" aria-expanded="false" aria-controls="top" aria-label="Žebříček" title="Žebříček" data-i18n-aria="btn.top" data-i18n-title="btn.top"><span class="g-txt" data-i18n="btn.top">Žebříček</span><svg class="g-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2h7v3.6a3.5 3.5 0 0 1-7 0V2zM4.5 3.2H2.3v1.3a2.2 2.2 0 0 0 2.4 2.2M11.5 3.2h2.2v1.3a2.2 2.2 0 0 1-2.4 2.2M8 9.1v2.6M5.2 14h5.6M6.2 11.7h3.6v2.3H6.2z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"></path></svg></button>
+    <button type="button" class="gear" id="gear" aria-expanded="false" aria-controls="settings" aria-label="Nastavení" title="Nastavení" data-i18n-aria="btn.settings" data-i18n-title="btn.settings"><span class="g-txt" data-i18n="btn.settings">Nastavení</span><svg class="g-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="M8 1.3v2M8 12.7v2M1.3 8h2M12.7 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M3.3 12.7l1.4-1.4M11.3 4.7l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path><circle cx="8" cy="8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.4"></circle></svg></button>
     </div>
     <div class="meta">
       <span><span data-i18n="meta.diff">Obtížnost:</span> <b id="m-diff">Střední</b></span>
       <span><span data-i18n="meta.time">Čas:</span> <b id="m-time">00:00</b></span>
       <span><span data-i18n="meta.errors">Chyby:</span> <b id="m-err">0</b></span>
       <span class="learn-badge off gone" id="m-learn" title="Učení: hra se nezapisuje do žebříčku" data-i18n-title="badge.learn.title"><span class="b-full" data-i18n="badge.learn">Učení</span><span class="b-abbr" data-i18n="badge.learn.abbr">U</span></span>
-      <span class="learn-badge off gone" id="m-debug" title="Debug mód: výsledek se zapíše s hvězdičkou" data-i18n-title="badge.debug.title"><span class="b-full" data-i18n="badge.debug">Debug *</span><span class="b-abbr" data-i18n="badge.debug.abbr">D</span></span>
+      <span class="learn-badge off gone" id="m-debug" title="Testování: výsledek se zapíše do žebříčku s hvězdičkou" data-i18n-title="badge.debug.title"><span class="b-full" data-i18n="badge.debug">Testování</span><span class="b-abbr" data-i18n="badge.debug.abbr">T</span></span>
     </div>
   </header>
 
@@ -254,38 +293,41 @@ html, body { max-width: 100%; overflow-x: hidden; }
     <fieldset>
       <legend class="label" data-i18n="sec.game">Hra</legend>
       <label class="lang-row" for="s-lang"><span data-i18n="set.lang">Jazyk</span><select id="s-lang"></select></label>
+      <label class="lang-row" for="s-theme"><span data-i18n="set.theme">Vzhled</span><select id="s-theme"><option value="system" data-i18n="theme.system">Systém</option><option value="light" data-i18n="theme.light">Světlý</option><option value="dark" data-i18n="theme.dark">Tmavý</option></select></label>
+      <label class="opt"><input type="checkbox" id="s-bignotes"><span><span data-i18n="set.bignotes">Větší poznámky</span><small data-i18n="set.bignotes.d">Poznámky v polích jsou větší, tučné a tmavé, aby byly dobře vidět i na mobilu.</small></span></label>
     </fieldset>
     <fieldset>
       <legend class="label" data-i18n="sec.sound">Zvuky</legend>
-      <label class="opt"><input type="checkbox" id="s-sound"><span><span data-i18n="set.sound">Zapnout zvuky</span><small data-i18n="set.sound.d">Po vyřešení sudoku zahraje vítěznou melodii.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-sound"><span><span data-i18n="set.sound">Zapnout zvuky</span><small data-i18n="set.sound.d">Vypne všechny zvuky.</small></span></label>
       <div class="vol" id="vol-row">
         <label for="s-volume" data-i18n="set.volume">Hlasitost</label>
         <input type="range" id="s-volume" min="1" max="10" step="1">
         <output id="vol-out" for="s-volume">5</output>
       </div>
+      <label class="opt sub" id="win-row"><input type="checkbox" id="s-win"><span><span data-i18n="set.win">Vítězná melodie</span><small data-i18n="set.win.d">Po vyřešení sudoku zahraje vítěznou melodii.</small></span></label>
       <label class="opt sub" id="pen-row"><input type="checkbox" id="s-pen"><span><span data-i18n="set.pen">Zvuk zápisu</span><small data-i18n="set.pen.d">Při zapsání čísla nebo poznámky zazní krátký jemný tón. Každá číslice má svůj.</small></span></label>
       <label class="opt sub" id="erase-row"><input type="checkbox" id="s-erase"><span><span data-i18n="set.erase">Zvuk mazání</span><small data-i18n="set.erase.d">Při smazání čísla nebo poznámek zazní krátký klesající tón.</small></span></label>
       <label class="opt sub" id="unit-row"><input type="checkbox" id="s-unit"><span><span data-i18n="set.unit">Zvuk dokončení řádku, sloupce a čtverce</span><small data-i18n="set.unit.d">Když doplníš celý řádek, sloupec nebo čtverec, zazní krátká zvonivá melodie. S vypnutým upozorněním na špatné číslo zazní i při chybě, aby zvuk nic neprozradil. Při více najednou je bohatší.</small></span></label>
     </fieldset>
     <fieldset>
-      <legend class="label" data-i18n="sec.help">Nápověda</legend>
-      <label class="opt"><input type="checkbox" id="s-learn"><span><span data-i18n="set.learn">Učení</span><small data-i18n="set.learn.d">Po nastavené době bez akce zvýrazní pole a zašedle v něm ukáže číslo, které tam patří. Hra, ve které je Učení zapnuté, se nezapisuje do žebříčku.</small></span></label>
+      <legend class="label" data-i18n="sec.help">Pomůcky</legend>
+      <label class="opt"><input type="checkbox" id="s-learn"><span><span data-i18n="set.learn">Režim učení</span><small data-i18n="set.learn.d">Po nastavené době bez akce zvýrazní pole a zašedle v něm ukáže číslo, které tam patří. Hra se zapnutým režimem učení se nezapisuje do žebříčku.</small></span></label>
       <div class="vol" id="learn-row">
-        <label for="s-learn-delay" data-i18n="set.learnDelay">Nápověda po</label>
-        <input type="range" id="s-learn-delay" min="1" max="15" step="1">
-        <output id="learn-out" for="s-learn-delay">5 s</output>
+        <label for="s-learn-delay" data-i18n="set.learnDelay">Ukázat po</label>
+        <input type="range" id="s-learn-delay" min="1" max="30" step="1">
+        <output id="learn-out" for="s-learn-delay">15 s</output>
       </div>
-      <label class="opt"><input type="checkbox" id="s-allhelp"><span><span data-i18n="set.allHelp">Všechny nápovědy</span><small data-i18n="set.allHelp.d">Zapne nebo vypne všechny nápovědy níže najednou.</small></span></label>
+      <label class="opt"><input type="checkbox" id="s-allhelp"><span><span data-i18n="set.allHelp">Všechny pomůcky</span><small data-i18n="set.allHelp.d">Zapne nebo vypne všechny pomůcky níže najednou.</small></span></label>
       <label class="opt sub"><input type="checkbox" id="s-peers"><span><span data-i18n="set.peers">Zvýrazňovat řádky a sloupce</span><small data-i18n="set.peers.d">Podbarví řádek, sloupec a čtverec vybraného pole.</small></span></label>
       <label class="opt sub"><input type="checkbox" id="s-same"><span><span data-i18n="set.same">Zvýrazňovat stejné číslice</span><small data-i18n="set.same.d">Po kliknutí na pole s číslem podbarví všechna stejná čísla na ploše.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-autonotes"><span><span data-i18n="set.autonotes">Automaticky odstraňovat poznámky</span><small data-i18n="set.autonotes.d">Po zapsání čísla ho smaže z poznámek ve stejném řádku, sloupci a čtverci.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-warn"><span><span data-i18n="set.warn">Upozornit na špatně zadané číslo</span><small data-i18n="set.warn.d">Číslo, které nepatří do řešení, se hned označí červeně a zobrazí se upozornění.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-dup"><span><span data-i18n="set.dup">Upozornit na duplicitní číslo</span><small data-i18n="set.dup.d">Označí čísla, která se opakují ve stejném řádku, sloupci nebo čtverci.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-autonotes"><span><span data-i18n="set.autonotes">Automaticky mazat poznámky</span><small data-i18n="set.autonotes.d">Po zapsání čísla ho smaže z poznámek ve stejném řádku, sloupci a čtverci.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-warn"><span><span data-i18n="set.warn">Upozorňovat na chybné číslo</span><small data-i18n="set.warn.d">Číslo, které nepatří do řešení, se hned označí červeně a zobrazí se upozornění.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-dup"><span><span data-i18n="set.dup">Upozorňovat na opakované číslo</span><small data-i18n="set.dup.d">Označí čísla, která se opakují ve stejném řádku, sloupci nebo čtverci.</small></span></label>
       <label class="opt sub"><input type="checkbox" id="s-count"><span><span data-i18n="set.count">Ukazovat, kolik čísel zbývá</span><small data-i18n="set.count.d">Na číselné klávesnici zobrazí u každé číslice, kolikrát ještě chybí na ploše.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-lock"><span><span data-i18n="set.lock">Zamykat vyčerpaná čísla</span><small data-i18n="set.lock.d">Když je číslice správně doplněná na všech devíti místech, deaktivuje se a nedá se dál zapsat ani přidat do poznámek.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-lock"><span><span data-i18n="set.lock">Zamykat hotová čísla</span><small data-i18n="set.lock.d">Když je číslice správně doplněná na všech devíti místech, deaktivuje se a nedá se dál zapsat ani přidat do poznámek.</small></span></label>
     </fieldset>
     <fieldset>
-      <legend class="label" data-i18n="sec.debug">Debug</legend>
+      <legend class="label" data-i18n="sec.debug">Admin</legend>
       <input type="password" class="dbg-key" id="dbg-key" autocomplete="off" spellcheck="false" aria-label="Kód" data-i18n-aria="dbg.key">
       <fieldset class="dbg-panel" id="dbg-panel" hidden="" disabled="">
       <label class="opt"><input type="checkbox" id="s-debug"><span><span data-i18n="set.debug">Vyplnit sudoku</span><small data-i18n="set.debug.d">Při nové hře vyplní celé sudoku kromě posledního pole. Výsledek se zapíše do žebříčku s hvězdičkou.</small></span></label>
@@ -312,7 +354,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     <div class="tabs" id="top-tabs" role="tablist"></div>
     <div class="tbl" id="top-body"></div>
     <div class="tbl review-box" id="top-review-list" hidden></div>
-    <p class="top-note" id="top-note" data-i18n="top.note">Žebříček se ukládá v tomto prohlížeči.</p>
+    <p class="top-note" id="top-note" data-i18n="top.note">Načítám žebříček…</p>
     <button type="button" class="btn primary" id="top-close" data-i18n="top.close">Zavřít žebříček</button>
   </section>
 
@@ -363,6 +405,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 </div>
 <script src="lang/cs.js"></script>
 <script src="lang/en.js"></script>
+<script src="lang/sk.js"></script>
 <script src="config.js"></script>
 <script>
 (() => {
@@ -503,13 +546,25 @@ html, body { max-width: 100%; overflow-x: hidden; }
     $("pause").disabled = !!S.done || picking;
   }
   function setRunning(r) { running = r && !S.done; render(); save(); if (running && sel >= 0) cells[sel].focus(); }
-  const OPT = { peers: false, same: false, autonotes: false, warn: false, dup: false, lock: false, count: false, sound: true, volume: 5, learn: false, learnDelay: 5, pen: true, erase: true, unit: true, debug: false, lang: "cs" };
+  const OPT = { theme: "system", win: true, bigNotes: true, peers: false, same: false, autonotes: false, warn: false, dup: false, lock: false, count: false, sound: true, volume: 5, learn: false, learnDelay: 15, pen: true, erase: true, unit: true, debug: false, lang: "cs" };
   let dbgUnlocked = false; // Debug sekce je zamčená, dokud se nezadá kód (kód se pamatuje v tomto prohlížeči, dokud se Debug neodhlásí).
   const solvedDigit = v => S.val.reduce((n, x, i) => n + (x === v && S.sol[i] === v), 0) === 9;
   try { Object.assign(OPT, JSON.parse(localStorage.getItem("sudoku-test-settings")) || {}); } catch (e) {}
   const saveOpt = () => { try { localStorage.setItem("sudoku-test-settings", JSON.stringify(OPT)); } catch (e) {} };
+  // Vzhled aplikace: Systém (podle nastavení telefonu / počítače), Světlý, Tmavý.
+  const darkMQ = matchMedia("(prefers-color-scheme: dark)");
+  function applyTheme() {
+    const th = ["light", "dark"].includes(OPT.theme) ? OPT.theme : "system";
+    if (th === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", th);
+    const dark = th === "dark" || (th === "system" && darkMQ.matches);
+    const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = dark ? "#12171d" : "#eef1f0";
+  }
+  applyTheme();
+  try { darkMQ.addEventListener("change", applyTheme); } catch (e) { darkMQ.addListener && darkMQ.addListener(applyTheme); }
   // Dřívější výchozí hlasitost byla 6 (stejně hlasitá jako dnešní 5).
   if (!OPT.volV2) { if (OPT.volume === 6) OPT.volume = 5; OPT.volV2 = 1; saveOpt(); }
+  // Dřívější výchozí doba Režimu učení byla 5 s, nová výchozí je 15 s (stupnice do 30 s).
+  if (!OPT.ldV2) { if (OPT.learnDelay === 5) OPT.learnDelay = 15; OPT.ldV2 = 1; saveOpt(); }
 
   function newGame(lv) {
     level = lv;
@@ -576,6 +631,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     S.counted.push(key); S.errors++;
   }
   function render() {
+    $("board").classList.toggle("big-notes", !!OPT.bigNotes);
     const bad = conflicts();
     const sv = sel >= 0 && OPT.same ? S.val[sel] : 0;
     const pset = sel >= 0 && OPT.peers ? new Set(peers[sel]) : new Set();
@@ -1075,6 +1131,83 @@ html, body { max-width: 100%; overflow-x: hidden; }
     if (picking) { if (!firstPick) $("pick-cancel").click(); } else openPicker();
   });
   $("notes").addEventListener("click", () => { notesMode = !notesMode; render(); });
+  // ---------- Sdílení odkazu na hru ----------
+  let toastTm = 0;
+  function toast(msg, ms = 2500) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toastTm); toastTm = setTimeout(() => { el.hidden = true; }, ms); }
+  $("share").addEventListener("click", async () => {
+    const url = location.origin + location.pathname;
+    // Na mobilu nabídka sdílení systému, jinak odkaz do schránky.
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+      try { await navigator.share({ title: document.title, url }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    let ok = false;
+    try { await navigator.clipboard.writeText(url); ok = true; } catch (e) {
+      try { const ta = document.createElement("textarea"); ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); ok = document.execCommand("copy"); ta.remove(); } catch (err) {}
+    }
+    toast(ok ? t("share.copied") : t("share.manual", { url }));
+  });
+  // ---------- Přidání na plochu / instalace aplikace (jen v prohlížeči, ne v nainstalované aplikaci) ----------
+  let installEvt = null;
+  const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function showInstall() { $("install").hidden = isStandalone(); fitHeader(); }
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; showInstall(); });
+  window.addEventListener("appinstalled", () => { installEvt = null; $("install").hidden = true; fitHeader(); toast(t("install.done")); });
+  $("install").addEventListener("click", async () => {
+    if (installEvt) {
+      // Android / Chrome: systémové okno instalace
+      const e = installEvt; installEvt = null;
+      try { e.prompt(); await e.userChoice; } catch (err) {}
+      return;
+    }
+    // iPhone a prohlížeče bez instalačního okna: návod krok za krokem (na PC záložka / instalace z adresního řádku)
+    const kind = browserKind();
+    $("install-steps").innerHTML = t("install." + kind).split("|").map(x => "<li>" + esc(x.trim()) + "</li>").join("");
+    // Instalovat jako aplikaci jde jen z webové adresy, ne ze souboru v počítači.
+    $("install-note").textContent = location.protocol === "file:" && !["firefox", "opera"].includes(kind) ? t("install.file") : /^(ios|android|other)/.test(kind) ? t("install.note") : "";
+    $("install-help").hidden = false; $("install-close").focus();
+  });
+  // Návod přesně pro daný prohlížeč (podle identifikace prohlížeče).
+  function browserKind() {
+    const ua = navigator.userAgent;
+    if (isIOS) return /CriOS/.test(ua) ? "ios-chrome" : /FxiOS/.test(ua) ? "ios-firefox" : /EdgiOS/.test(ua) ? "ios-edge" : "ios";
+    if (/Android/.test(ua) || matchMedia("(pointer: coarse)").matches) return /SamsungBrowser/.test(ua) ? "android-samsung" : /Firefox\//.test(ua) ? "android-firefox" : /EdgA\//.test(ua) ? "android-edge" : /Chrome\//.test(ua) ? "android-chrome" : "other";
+    if (/Firefox\//.test(ua)) return "firefox";
+    if (/Edg\//.test(ua)) return "edge";
+    if (/OPR\//.test(ua)) return "opera";
+    if (/Safari\//.test(ua) && !/Chrome\/|Chromium\//.test(ua)) return "safari";
+    return "desktop";
+  }
+  const closeHelp = () => { $("install-help").hidden = true; };
+  $("install-close").addEventListener("click", closeHelp);
+  $("install-help").addEventListener("click", e => { if (e.target === $("install-help")) closeHelp(); });
+  window.addEventListener("keydown", e => { if ($("install-help").hidden) return; if (e.key === "Escape") closeHelp(); if (e.key !== "Tab" && e.key !== "Enter" && e.key !== " ") { e.stopImmediatePropagation(); } }, true);
+
+  // ---------- Nová verze hry: kontrola na pozadí a nabídka aktualizace ----------
+  // Porovná kód této stránky s verzí na serveru (po spuštění, při návratu do aplikace a každých 30 minut).
+  let updLast = 0, updDismissed = false;
+  async function checkUpdate() {
+    if (!/^https?:/.test(location.protocol) || updDismissed || !$("update-bar").hidden || Date.now() - updLast < 60000) return;
+    updLast = Date.now();
+    try {
+      const html = await (await fetch(location.pathname, { cache: "no-store" })).text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const remote = [...doc.querySelectorAll("script:not([src])")].map(x => x.textContent).sort((a, b) => b.length - a.length)[0] || "";
+      if (remote && remote.trim() !== MAIN_SCRIPT.textContent.trim()) $("update-bar").hidden = false;
+    } catch (e) {}
+  }
+  $("update-go").addEventListener("click", async () => {
+    $("update-go").disabled = true;
+    // Stáhne čerstvé soubory do mezipaměti prohlížeče, aby se po obnovení nenačetla stará verze. Rozehraná hra zůstane uložená.
+    const files = [location.pathname, ...[...document.querySelectorAll("script[src], link[rel=manifest]")].map(x => x.getAttribute("src") || x.getAttribute("href"))];
+    try { save(); } catch (e) {}
+    await Promise.all(files.map(f => fetch(f, { cache: "reload" }).catch(() => {})));
+    location.reload();
+  });
+  $("update-later").addEventListener("click", () => { updDismissed = true; $("update-bar").hidden = true; });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkUpdate(); });
+  setTimeout(checkUpdate, 5000); setInterval(checkUpdate, 30 * 60000);
+  showInstall();
   $("go").addEventListener("click", () => setRunning(true));
   function pauseButton() {
     const panelOpen = !$("settings").hidden || !$("top").hidden;
@@ -1103,7 +1236,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   const volMul = () => Math.min(10, Math.max(1, +OPT.volume || 5)) / 5;
   let audioCtx = null;
   function playVictory() {
-    if (!OPT.sound) return;
+    if (!OPT.sound || OPT.win === false) return;
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
@@ -1181,7 +1314,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   function learnTick() {
     if (!S || S.done || !running) return;
     if (OPT.learn && !S.learned) { S.learned = true; save(); render(); }
-    if (!OPT.learn || learnCell >= 0 || Date.now() - lastAct < 1000 * Math.min(15, Math.max(1, +OPT.learnDelay || 5))) return;
+    if (!OPT.learn || learnCell >= 0 || Date.now() - lastAct < 1000 * Math.min(30, Math.max(1, +OPT.learnDelay || 15))) return;
     const h = findHint(); if (!h) return;
     learnCell = h.i; render();
   }
@@ -1200,6 +1333,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     $("s-volume").value = OPT.volume; $("vol-out").textContent = OPT.volume;
     const on = $("s-sound").checked;
     $("s-volume").disabled = !on; $("vol-row").classList.toggle("off", !on);
+    $("s-win").disabled = !on; $("win-row").classList.toggle("off", !on);
     $("s-pen").disabled = !on; $("pen-row").classList.toggle("off", !on);
     $("s-erase").disabled = !on; $("erase-row").classList.toggle("off", !on);
     $("s-unit").disabled = !on; $("unit-row").classList.toggle("off", !on);
@@ -1283,7 +1417,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   $("s-volume").addEventListener("change", () => { saveOpt(); playTick(); });
   $("s-sound").addEventListener("change", syncVolume);
   queueMicrotask(syncVolume);
-  [["s-peers", "peers"], ["s-same", "same"], ["s-autonotes", "autonotes"], ["s-warn", "warn"], ["s-dup", "dup"], ["s-lock", "lock"], ["s-count", "count"], ["s-sound", "sound"], ["s-learn", "learn"], ["s-pen", "pen"], ["s-erase", "erase"], ["s-unit", "unit"], ["s-debug", "debug"]].forEach(([id, key]) => {
+  [["s-bignotes", "bigNotes"], ["s-peers", "peers"], ["s-same", "same"], ["s-autonotes", "autonotes"], ["s-warn", "warn"], ["s-dup", "dup"], ["s-lock", "lock"], ["s-count", "count"], ["s-sound", "sound"], ["s-learn", "learn"], ["s-pen", "pen"], ["s-erase", "erase"], ["s-unit", "unit"], ["s-win", "win"], ["s-debug", "debug"]].forEach(([id, key]) => {
     $(id).checked = OPT[key];
     $(id).addEventListener("change", () => { OPT[key] = $(id).checked; saveOpt(); render(); });
   });
@@ -1380,6 +1514,8 @@ html, body { max-width: 100%; overflow-x: hidden; }
     if (data && data.panel) { lastId = data.lastId || null; if (data.panel === "top") showTop(data.topLv || S.level); else setPanel("settings"); resumeAfterPanel = !!data.resume && !S.done; }
   }
   applyLang(); $("s-lang").value = OPT.lang;
+  $("s-theme").value = OPT.theme || "system";
+  $("s-theme").addEventListener("change", () => { OPT.theme = $("s-theme").value; saveOpt(); applyTheme(); });
   if (SCORES_URL) {
     remoteLoad().then(() => { if (dbgUnlocked) loadReview(); }); // schvalování má nižší prioritu
     flushPending().then(sent => { if (sent) remoteLoad(); });
