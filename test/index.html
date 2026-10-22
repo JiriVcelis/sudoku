@@ -285,15 +285,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         <span class="dbg-msg" id="dbg-msg" aria-live="polite"></span>
       </div>
       <div class="dbg-reset">
-        <button type="button" class="btn" id="all-reset" data-i18n="all.reset">Resetovat žebříček</button>
-        <div class="confirm" id="all-confirm" hidden="">
-          <span id="all-question" data-i18n="all.question">Smazat celý žebříček?</span>
-          <div><button type="button" class="btn primary" id="all-yes" data-i18n="all.yes">Ano, smazat vše</button><button type="button" class="btn" id="all-no" data-i18n="btn.cancel">Zrušit</button></div>
-        </div>
-        <span class="dbg-msg" id="all-msg" aria-live="polite"></span>
-      </div>
-      <div class="dbg-reset">
-        <button type="button" class="btn" id="dbg-lock" data-i18n="dbg.lock">Odhlásit Debug</button>
+        <button type="button" class="btn" id="dbg-lock" data-i18n="dbg.lock">Odhlásit admina</button>
         <small class="dbg-msg" data-i18n="dbg.lock.d">Kód je uložený v tomto prohlížeči. Odhlášením ho z něj smažeš.</small>
       </div>
       </fieldset>
@@ -917,45 +909,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     remoteLoad();
   });
 
-  // ---------- Hra: reset celého žebříčku ----------
   const plural = (n, a, b, c) => n === 1 ? a : n > 1 && n < 5 ? b : c;
-  function countAll() {
-    let n = 0;
-    for (const lv of Object.keys(DIFF)) n += boardListAll(lv);
-    return n;
-  }
-  function boardListAll(lv) {
-    if (REMOTE && REMOTE[lv]) return REMOTE[lv].length;
-    let noAll = false; try { noAll = localStorage.getItem("sudoku-test-embed-hidden") === EMBED_REV; } catch (e) {}
-    const ids = new Set((TOP[lv] || []).map(r => String(r.id)));
-    if (!noAll && Array.isArray(EMBED[lv])) EMBED[lv].forEach(r => r && ids.add(String(r.id)));
-    return ids.size;
-  }
-  $("all-reset").addEventListener("click", () => {
-    if (!dbgUnlocked) return;
-    const n = countAll();
-    $("all-msg").textContent = "";
-    if (!n) { $("all-msg").textContent = t("all.empty"); return; }
-    $("all-question").textContent = t(SCORES_URL ? "all.qRemote" : "all.q", { n, res: tp(n, "pl.results") });
-    $("all-confirm").hidden = false; $("all-reset").hidden = true;
-  });
-  $("all-no").addEventListener("click", () => { $("all-confirm").hidden = true; $("all-reset").hidden = false; });
-  $("all-yes").addEventListener("click", async () => {
-    if (!dbgUnlocked) return;
-    $("all-confirm").hidden = true; $("all-reset").hidden = false;
-    let removed = countAll(), failed = 0;
-    TOP = {}; saveTop(); lastId = null;
-    try { localStorage.setItem("sudoku-test-embed-hidden", EMBED_REV); } catch (e) {}
-    if (SCORES_URL) {
-      $("all-msg").textContent = t("deleting");
-      try { const d = await remotePost({ action: "reset", key: dbgCode }); removed = d.removed || 0; PENDING = []; savePending(); await remoteLoad(); }
-      catch (e) { $("all-msg").textContent = t(String(e.message) === "denied" ? "remote.denied" : "remote.fail"); return; }
-    }
-    renderTop(); saveToFile();
-    $("all-msg").textContent = failed
-      ? t("del.failed", { r: removed, f: failed })
-      : t("all.done", { n: removed });
-  });
 
   // ---------- Debug: ----------
   const DBG_HASH = "56156e7a1179fe243b1a6ef1aa03194da501596e56b015ca1192f2d2e650d6b2";
