@@ -172,6 +172,8 @@
   "install.title": "Pin the game – keep it handy",
   "install.ok": "Got it",
   "upd.text": "A new version of the game is available.",
+  "set.version": "version {v}",
+  "upd.textVer": "A new version of the game is available: {v}.",
   "upd.go": "Update",
   "btn.close": "Close",
   "install.edge": "In Edge, an \"App available\" icon (squares with a plus) appears on the right of the address bar – click it and confirm Install.|If the icon is missing: menu … at the top right → Apps → Install this site as an app.|The game then opens in its own window, is in the Start menu and can be pinned to the taskbar. For a plain bookmark, just press Ctrl+D.",

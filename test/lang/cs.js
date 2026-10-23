@@ -172,6 +172,8 @@
   "install.title": "Připni si hru – ať ji máš vždy po ruce",
   "install.ok": "Rozumím",
   "upd.text": "Je k dispozici nová verze hry.",
+  "set.version": "verze {v}",
+  "upd.textVer": "Je k dispozici nová verze hry {v}.",
   "upd.go": "Aktualizovat",
   "btn.close": "Zavřít",
   "install.edge": "V Edge se vpravo v adresním řádku ukáže ikona „Aplikace je k dispozici“ (čtverečky s plusem) – klikni na ni a potvrď Instalovat.|Když ikona chybí: menu … vpravo nahoře → Aplikace → Nainstalovat tento web jako aplikaci.|Hra se pak spouští ve vlastním okně, je v nabídce Start a jde připnout na hlavní panel. Pro obyčejnou záložku stačí Ctrl+D.",

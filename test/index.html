@@ -179,6 +179,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .opt.off { opacity: 0.45; cursor: default; }
 .lang-row { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; }
 #m-debug { text-transform: uppercase; letter-spacing: 0.04em; } /* TESTOVÁNÍ kapitálkami */
+.app-ver { margin: 0; text-align: center; color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 .lang-row > span { flex: 0 0 6.5em; } .lang-row select { min-width: 9.5em; } /* Jazyk a Vzhled: rozbalovací nabídky zarovnané pod sebou */
 .lang-row select { font: 500 0.95rem var(--f-body); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
 .opt small { display: block; color: var(--muted); font-size: 0.8rem; }
@@ -345,6 +346,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
       </div>
       </fieldset>
     </fieldset>
+    <p class="app-ver" id="app-ver"></p>
     <button type="button" class="btn primary" id="settings-close" data-i18n="settings.close">Zavřít nastavení</button>
   </section>
 
@@ -403,15 +405,16 @@ html, body { max-width: 100%; overflow-x: hidden; }
     </div>
   </div>
 </div>
-<script src="lang/cs.js?v=20261022b"></script>
-<script src="lang/en.js?v=20261022b"></script>
-<script src="lang/sk.js?v=20261022b"></script>
-<script src="config.js?v=20261022b"></script>
+<script src="lang/cs.js?v=3.1.2026.10.23.0729"></script>
+<script src="lang/en.js?v=3.1.2026.10.23.0729"></script>
+<script src="lang/sk.js?v=3.1.2026.10.23.0729"></script>
+<script src="config.js?v=3.1.2026.10.23.0729"></script>
 <script>
 (() => {
   // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro uložení stránky i se žebříčkem).
-  // Verze aplikace: při každé změně (i jen jazykových souborů) zvýšit zde i v ?v= u <script src> výše. Podle ní hra pozná novou verzi.
-  const APP_VER = "20261022b";
+  // Verze aplikace: 3.1 = hlavní verze (mění jen Jirka při nových funkcích), pak rok.měsíc.den.čas změny.
+  // Při každé změně (i jen jazykových souborů) zvýšit zde i v ?v= u <script src> výše. Podle ní hra pozná novou verzi.
+  const APP_VER = "3.1.2026.10.23.0729";
   const MAIN_SCRIPT = document.currentScript;
   const PRISTINE = [...document.body.children].filter(n =>
     ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
@@ -1197,7 +1200,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
       const html = await (await fetch(location.pathname, { cache: "no-store" })).text();
       const doc = new DOMParser().parseFromString(html, "text/html");
       const remote = [...doc.querySelectorAll("script:not([src])")].map(x => x.textContent).sort((a, b) => b.length - a.length)[0] || "";
-      if (remote && remote.trim() !== MAIN_SCRIPT.textContent.trim()) $("update-bar").hidden = false;
+      if (remote && remote.trim() !== MAIN_SCRIPT.textContent.trim()) {
+        const rv = (remote.match(/APP_VER = "([^"]+)"/) || [])[1];
+        $("update-bar").querySelector("span").textContent = rv ? t("upd.textVer", { v: rv }) : t("upd.text");
+        $("update-bar").hidden = false;
+      }
     } catch (e) {}
   }
   $("update-go").addEventListener("click", async () => {
@@ -1488,6 +1495,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     if (!Object.keys(LANGS).length) return; // jazykové soubory se nenačetly: zůstane výchozí čeština z HTML
     // Chybí-li překlad (např. starší jazykový soubor v mezipaměti), zůstane výchozí text ze stránky, ne název klíče.
     const tr = (k, fn) => { const v = t(k); if (v !== k) fn(v); };
+    $("app-ver").textContent = document.title + " · " + t("set.version", { v: APP_VER });
     document.querySelectorAll("[data-i18n]").forEach(e => tr(e.dataset.i18n, v => { e.textContent = v; }));
     document.querySelectorAll("[data-i18n-html]").forEach(e => tr(e.dataset.i18nHtml, v => { e.innerHTML = v; }));
     document.querySelectorAll("[data-i18n-title]").forEach(e => tr(e.dataset.i18nTitle, v => { e.title = v; }));

@@ -172,6 +172,8 @@
   "install.title": "Pripni si hru – nech ju máš vždy poruke",
   "install.ok": "Rozumiem",
   "upd.text": "Je k dispozícii nová verzia hry.",
+  "set.version": "verzia {v}",
+  "upd.textVer": "Je k dispozícii nová verzia hry {v}.",
   "upd.go": "Aktualizovať",
   "btn.close": "Zavrieť",
   "install.edge": "V Edge sa vpravo v paneli s adresou zobrazí ikona „Aplikácia je k dispozícii“ (štvorčeky s plusom) – klikni na ňu a potvrď Inštalovať.|Ak ikona chýba: ponuka … vpravo hore → Aplikácie → Nainštalovať túto lokalitu ako aplikáciu.|Hra sa potom spúšťa vo vlastnom okne, je v ponuke Štart a dá sa pripnúť na panel úloh. Na obyčajnú záložku stačí Ctrl+D.",
