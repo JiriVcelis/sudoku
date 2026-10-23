@@ -319,13 +319,13 @@ html, body { max-width: 100%; overflow-x: hidden; }
         <output id="learn-out" for="s-learn-delay">15 s</output>
       </div>
       <label class="opt"><input type="checkbox" id="s-allhelp"><span><span data-i18n="set.allHelp">Všechny pomůcky</span><small data-i18n="set.allHelp.d">Zapne nebo vypne všechny pomůcky níže najednou.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-peers"><span><span data-i18n="set.peers">Zvýrazňovat řádky a sloupce</span><small data-i18n="set.peers.d">Podbarví řádek, sloupec a čtverec vybraného pole.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-same"><span><span data-i18n="set.same">Zvýrazňovat stejné číslice</span><small data-i18n="set.same.d">Po kliknutí na pole s číslem podbarví všechna stejná čísla na ploše.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-autonotes"><span><span data-i18n="set.autonotes">Automaticky mazat poznámky</span><small data-i18n="set.autonotes.d">Po zapsání čísla ho smaže z poznámek ve stejném řádku, sloupci a čtverci.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-warn"><span><span data-i18n="set.warn">Upozorňovat na chybné číslo</span><small data-i18n="set.warn.d">Číslo, které nepatří do řešení, se hned označí červeně a zobrazí se upozornění.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-dup"><span><span data-i18n="set.dup">Upozorňovat na opakované číslo</span><small data-i18n="set.dup.d">Označí čísla, která se opakují ve stejném řádku, sloupci nebo čtverci.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-count"><span><span data-i18n="set.count">Ukazovat, kolik čísel zbývá</span><small data-i18n="set.count.d">Na číselné klávesnici zobrazí u každé číslice, kolikrát ještě chybí na ploše.</small></span></label>
-      <label class="opt sub"><input type="checkbox" id="s-lock"><span><span data-i18n="set.lock">Zamykat hotová čísla</span><small data-i18n="set.lock.d">Když je číslice správně doplněná na všech devíti místech, deaktivuje se a nedá se dál zapsat ani přidat do poznámek.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-peers"><span><span data-i18n="set.peers">Zvýrazňovat řádky a sloupce</span><small data-i18n="set.peers.d">Podbarví řádek, sloupec a čtverec vybraného pole. Trest +15 s za hru.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-same"><span><span data-i18n="set.same">Zvýrazňovat stejné číslice</span><small data-i18n="set.same.d">Po kliknutí na pole s číslem podbarví všechna stejná čísla na ploše. Trest +15 s za hru.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-autonotes"><span><span data-i18n="set.autonotes">Automaticky mazat poznámky</span><small data-i18n="set.autonotes.d">Po zapsání čísla ho smaže z poznámek ve stejném řádku, sloupci a čtverci. Trest +30 s za hru.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-warn"><span><span data-i18n="set.warn">Upozorňovat na chybné číslo</span><small data-i18n="set.warn.d">Číslo, které nepatří do řešení, se hned označí červeně a zobrazí se upozornění. Trest +30 s za každou chybu.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-dup"><span><span data-i18n="set.dup">Upozorňovat na opakované číslo</span><small data-i18n="set.dup.d">Označí čísla, která se opakují ve stejném řádku, sloupci nebo čtverci. Trest +30 s za každou chybu.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-count"><span><span data-i18n="set.count">Ukazovat, kolik čísel zbývá</span><small data-i18n="set.count.d">Na číselné klávesnici zobrazí u každé číslice, kolikrát ještě chybí na ploše. Trest +15 s za hru.</small></span></label>
+      <label class="opt sub"><input type="checkbox" id="s-lock"><span><span data-i18n="set.lock">Zamykat hotová čísla</span><small data-i18n="set.lock.d">Když je číslice správně doplněná na všech devíti místech, deaktivuje se a nedá se dál zapsat ani přidat do poznámek. Trest +30 s za hru.</small></span></label>
     </fieldset>
     <fieldset>
       <legend class="label" data-i18n="sec.debug">Admin</legend>
@@ -405,16 +405,16 @@ html, body { max-width: 100%; overflow-x: hidden; }
     </div>
   </div>
 </div>
-<script src="lang/cs.js?v=3.1.2026.10.23.0729"></script>
-<script src="lang/en.js?v=3.1.2026.10.23.0729"></script>
-<script src="lang/sk.js?v=3.1.2026.10.23.0729"></script>
-<script src="config.js?v=3.1.2026.10.23.0729"></script>
+<script src="lang/cs.js?v=3.2.2026.10.23.1307"></script>
+<script src="lang/en.js?v=3.2.2026.10.23.1307"></script>
+<script src="lang/sk.js?v=3.2.2026.10.23.1307"></script>
+<script src="config.js?v=3.2.2026.10.23.1307"></script>
 <script>
 (() => {
   // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro uložení stránky i se žebříčkem).
   // Verze aplikace: 3.1 = hlavní verze (mění jen Jirka při nových funkcích), pak rok.měsíc.den.čas změny.
   // Při každé změně (i jen jazykových souborů) zvýšit zde i v ?v= u <script src> výše. Podle ní hra pozná novou verzi.
-  const APP_VER = "3.1.2026.10.23.0729";
+  const APP_VER = "3.2.2026.10.23.1307";
   const MAIN_SCRIPT = document.currentScript;
   const PRISTINE = [...document.body.children].filter(n =>
     ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
@@ -533,7 +533,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     const showCover = picking || (!running && (!S.done || resultOpen));
     $("cover").hidden = !showCover;
     boardEl.classList.toggle("covered", showCover);
-    const resText = () => t("res.time", { t: fmt(S.secs) }) + (S.errors ? t("res.penalty", { n: S.errors, t: fmt(total(S)) }) : "") +
+    const resText = () => t("res.time", { t: fmt(S.secs) }) + ((pens(S) || aidOf(S)) && !S.learned ? t("res.penalty", { p: penText(S), t: fmt(total(S)) }) : "") +
       t("res.stats", { e: S.errors, h: S.learned ? "∞" : S.hints }) +
       (S.pending ? "" : S.rankInfo === -1 ? t("res.learn") : S.rankInfo === 0 ? t("res.noRank") : "");
     $("cover-title").textContent = picking ? t("cover.new") : resultOpen ? t("cover.solved") : fresh ? t("cover.ready") : t("cover.paused");
@@ -635,7 +635,14 @@ html, body { max-width: 100%; overflow-x: hidden; }
     if (S.given[i] || !v || v === S.sol[i] || S.counted.includes(key)) return;
     S.counted.push(key); S.errors++;
   }
+  function noteAids() {
+    if (!S || S.done || S.learned) return;
+    if (!Array.isArray(S.aids)) S.aids = [];
+    for (const k of Object.keys(AID_SECS)) if (OPT[k] && !S.aids.includes(k)) S.aids.push(k);
+    S.aid = S.aids.reduce((n, k) => n + (AID_SECS[k] || 0), 0);
+  }
   function render() {
+    noteAids();
     $("board").classList.toggle("big-notes", !!OPT.bigNotes);
     const bad = conflicts();
     const sv = sel >= 0 && OPT.same ? S.val[sel] : 0;
@@ -721,7 +728,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
       const open = [...Array(81).keys()].filter(k => S.val[k] !== S.sol[k]);
       if (!open.length) return; i = open[Math.random() * open.length | 0];
     }
-    if (S.val[i]) flag(i);
+    // Nápověda na pole se špatným číslem se počítá jen jako nápověda (jedna rada = jeden trest 30 s).
     S.history.push({ i, val: S.val[i], notes: S.notes[i] });
     S.val[i] = S.sol[i]; S.notes[i] = 0; S.hints++; unitDone(i);
     if (OPT.autonotes) for (const p of peers[i]) S.notes[p] &= ~(1 << S.sol[i]);
@@ -746,7 +753,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
       const rank = S.learned ? -1 : recordResult();
       S.rankInfo = rank;
       setTimeout(() => { if (S.done && !picking) { resultOpen = true; render(); showNameForm(); } }, 1800);
-      setStatus(t("msg.solved", { t: fmt(S.secs) }) + (S.errors ? t("msg.penalty", { n: S.errors, t: fmt(total(S)) }) : "") + t("msg.stats", { e: S.errors, h: S.learned ? "∞" : S.hints }) +
+      setStatus(t("msg.solved", { t: fmt(S.secs) }) + ((pens(S) || aidOf(S)) && !S.learned ? t("msg.penalty", { p: penText(S), t: fmt(total(S)) }) : "") + t("msg.stats", { e: S.errors, h: S.learned ? "∞" : S.hints }) +
         (rank < 0 ? t("res.learn") : rank ? t("msg.rank", { r: rank }) : t("msg.noRank")), "win");
       save();
     }
@@ -760,10 +767,18 @@ html, body { max-width: 100%; overflow-x: hidden; }
   const saveTop = () => { try { localStorage.setItem("sudoku-test-top", JSON.stringify(TOP)); } catch (e) {} };
   // Výsledný čas = odehraný čas + 30 s za každou chybu
   const PENALTY = 30;
-  const total = r => (+r.secs || 0) + PENALTY * (+r.errors || 0);
+  // Trest 30 s za každou radu: chybu, kterou hra odhalila (upozornění, Zkontrolovat), i za každou nápovědu.
+  const pens = r => (+r.errors || 0) + (+r.hints || 0);
+  // Trest za pomůcky zapnuté během hry (jednou za hru, i když byla zapnutá jen chvíli).
+  const AID_SECS = { peers: 15, same: 15, autonotes: 30, count: 15, lock: 30 };
+  const aidOf = r => +r.aid || 0;
+  const total = r => (+r.secs || 0) + PENALTY * pens(r) + aidOf(r);
+  // Rozpis trestu do textu: „2 × 30 s + 45 s za pomůcky“
+  const penText = r => [pens(r) ? pens(r) + " × 30 s" : "", aidOf(r) ? t("pen.aids", { a: aidOf(r) }) : ""].filter(Boolean).join(" + ");
+  const penShort = r => [pens(r) ? pens(r) + " × 30 s" : "", aidOf(r) ? aidOf(r) + " s" : ""].filter(Boolean).join(" + ");
   const byRank = (a, b) => total(a) - total(b) || a.errors - b.errors || a.hints - b.hints || a.at - b.at;
   const clean = r => ({ id: String(r && r.id || ""), name: String(r && r.name || "").slice(0, 30), secs: Math.max(0, +r.secs || 0),
-    errors: Math.max(0, +r.errors || 0), hints: Math.max(0, +r.hints || 0), at: +r.at || 0, debug: !!(r && r.debug) });
+    errors: Math.max(0, +r.errors || 0), hints: Math.max(0, +r.hints || 0), aid: Math.max(0, +r.aid || 0), at: +r.at || 0, debug: !!(r && r.debug) });
   const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const setNote = t => { $("top-note").textContent = t; };
   const sharedNote = () => "Společná tabulka všech hráčů. Výsledky se ukládají a načítají automaticky.";
@@ -867,7 +882,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   const MIN_SECS_PER_CELL = 2;
   const isSuspicious = st => !st.debug && st.secs < MIN_SECS_PER_CELL * st.given.filter(g => !g).length;
   function recordResult() {
-    const entry = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), level: S.level, secs: S.secs, errors: S.errors, hints: S.hints, at: Date.now(), ...(S.debug ? { debug: true } : {}), ...(isSuspicious(S) ? { review: true } : {}) };
+    const entry = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), level: S.level, secs: S.secs, errors: S.errors, hints: S.hints, ...(S.aid ? { aid: S.aid } : {}), at: Date.now(), ...(S.debug ? { debug: true } : {}), ...(isSuspicious(S) ? { review: true } : {}) };
     const rank = boardList(S.level).concat(entry).sort(byRank).findIndex(r => r.id === entry.id) + 1;
     if (rank < 1 || rank > 25) return 0;
     S.pending = entry;
@@ -877,7 +892,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     const f = $("name-form"); f.hidden = !(S && S.pending && resultOpen);
     if (f.hidden) return;
     const rank = boardList(S.pending.level).concat(S.pending).sort(byRank).findIndex(r => r.id === S.pending.id) + 1;
-    $("name-label").textContent = t("name.congrats", { r: rank, d: DIFF[S.pending.level].name, t: fmt(total(S.pending)), p: S.pending.errors ? t("name.penalty") : "" });
+    $("name-label").textContent = t("name.congrats", { r: rank, d: DIFF[S.pending.level].name, t: fmt(total(S.pending)), p: (pens(S.pending) || aidOf(S.pending)) ? t("name.penalty") : "" });
     $("name-err").textContent = "";
     // Předvyplní poslední použité jméno (z tohoto prohlížeče, případně z posledního vlastního výsledku) a označí ho, aby šlo hned přepsat.
     let last = ""; try { last = localStorage.getItem("sudoku-test-name") || ""; } catch (e) {}
@@ -921,9 +936,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
     if (!list.length) { $("top-body").innerHTML = `<p class="empty">${esc(t("top.empty", { d: DIFF[lv].name }))}</p>`; return; }
     const df = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
     $("top-body").innerHTML = `<table><thead><tr><th>#</th><th>${esc(t("top.player"))}</th><th>${esc(t("top.time"))}</th><th>${esc(t("top.errors"))}</th><th>${esc(t("top.hints"))}</th><th>${esc(t("top.date"))}</th></tr></thead><tbody>` +
-      list.map((r, i) => `<tr class="${r.id === lastId ? "new" : ""}"><td class="r">${i + 1}.</td><td class="who">${esc(r.name || "—")}${r.debug ? '<span class="dbg" title="${esc(t("top.debug"))}"> *</span>' : ""}</td><td class="t${r.errors ? " pen" : ""}"${r.errors ? ` title="${fmt(r.secs)} + ${r.errors} × 30 s"` : ""}>${fmt(total(r))}${r.errors ? `<small>${fmt(r.secs)} + ${r.errors} × 30 s</small>` : ""}</td><td>${r.errors}</td><td>${r.hints}</td><td>${r.at ? df.format(r.at) : ""}</td></tr>`).join("") +
+      list.map((r, i) => `<tr class="${r.id === lastId ? "new" : ""}"><td class="r">${i + 1}.</td><td class="who">${esc(r.name || "—")}${r.debug ? '<span class="dbg" title="${esc(t("top.debug"))}"> *</span>' : ""}</td><td class="t${total(r) > r.secs ? " pen" : ""}"${total(r) > r.secs ? ` title="${fmt(r.secs)} + ${esc(penText(r))}"` : ""}>${fmt(total(r))}${total(r) > r.secs ? `<small>${fmt(r.secs)} + ${penShort(r)}</small>` : ""}</td><td>${r.errors}</td><td>${r.hints}</td><td>${r.at ? df.format(r.at) : ""}</td></tr>`).join("") +
       "</tbody></table>" +
-      (list.some(r => r.errors) ? '<p class="legend">' + t("top.legendPen") + '</p>' : "") +
+      (list.some(r => total(r) > r.secs) ? '<p class="legend">' + t("top.legendPen") + '</p>' : "") +
       (list.some(r => r.debug) ? '<p class="legend"><span class="dbg">*</span>' + esc(t("top.legendDbg")) + '</p>' : "");
   }
 
