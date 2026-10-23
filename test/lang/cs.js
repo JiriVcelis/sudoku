@@ -147,6 +147,8 @@
   "top.time": "Čas",
   "top.errors": "Chyby",
   "top.hints": "Nápovědy",
+  "top.aids": "Pomůcky",
+  "top.aidsUnknown": "Seznam pomůcek se u tohoto výsledku neuložil.",
   "top.date": "Datum",
   "top.debug": "Debug mód",
   "top.legendPen": "<b>Červený čas</b> obsahuje trest 30 s za každou chybu a nápovědu a trest za zapnuté pomůcky.",

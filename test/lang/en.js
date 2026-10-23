@@ -147,6 +147,8 @@
   "top.time": "Time",
   "top.errors": "Mistakes",
   "top.hints": "Hints",
+  "top.aids": "Aids",
+  "top.aidsUnknown": "The list of aids was not saved for this result.",
   "top.date": "Date",
   "top.debug": "Debug mode",
   "top.legendPen": "<b>Red time</b> includes a 30 s penalty for each mistake and hint and a penalty for aids that were on.",

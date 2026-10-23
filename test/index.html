@@ -215,6 +215,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .tbl tr.new td { animation: none; } }
 .tbl tr:last-child td { border-bottom: 0; }
 .tbl td.who { max-width: 14em; overflow: hidden; text-overflow: ellipsis; }
+.tbl th .ico { display: none; } .tbl th .ico svg { width: 15px; height: 15px; vertical-align: -3px; }
+.tbl td.aids[title] { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+@media (max-width: 560px) { .tbl th .lbl { display: none; } .tbl th .ico { display: inline; } .tbl th, .tbl td { padding-inline: 6px; } }
 .name-form { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft); font-size: 0.92rem; }
 .cover .name-form { width: min(100%, 440px); text-align: left; }
 .name-row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -405,16 +408,16 @@ html, body { max-width: 100%; overflow-x: hidden; }
     </div>
   </div>
 </div>
-<script src="lang/cs.js?v=3.2.2026.10.23.1307"></script>
-<script src="lang/en.js?v=3.2.2026.10.23.1307"></script>
-<script src="lang/sk.js?v=3.2.2026.10.23.1307"></script>
-<script src="config.js?v=3.2.2026.10.23.1307"></script>
+<script src="lang/cs.js?v=3.2.2026.10.23.1339"></script>
+<script src="lang/en.js?v=3.2.2026.10.23.1339"></script>
+<script src="lang/sk.js?v=3.2.2026.10.23.1339"></script>
+<script src="config.js?v=3.2.2026.10.23.1339"></script>
 <script>
 (() => {
   // Čistý zdroj stránky zachycený před tím, než ho skript změní (pro uložení stránky i se žebříčkem).
   // Verze aplikace: 3.1 = hlavní verze (mění jen Jirka při nových funkcích), pak rok.měsíc.den.čas změny.
   // Při každé změně (i jen jazykových souborů) zvýšit zde i v ?v= u <script src> výše. Podle ní hra pozná novou verzi.
-  const APP_VER = "3.2.2026.10.23.1307";
+  const APP_VER = "3.2.2026.10.23.1339";
   const MAIN_SCRIPT = document.currentScript;
   const PRISTINE = [...document.body.children].filter(n =>
     ["TITLE", "META", "LINK", "STYLE"].includes(n.tagName) || (n.tagName === "DIV" && n.classList.contains("wrap"))
@@ -771,6 +774,13 @@ html, body { max-width: 100%; overflow-x: hidden; }
   const pens = r => (+r.errors || 0) + (+r.hints || 0);
   // Trest za pomůcky zapnuté během hry (jednou za hru, i když byla zapnutá jen chvíli).
   const AID_SECS = { peers: 15, same: 15, autonotes: 30, count: 15, lock: 30 };
+  const aidList = v => (Array.isArray(v) ? v : String(v || "").split(",")).map(k => String(k).trim()).filter((k, i, a) => AID_SECS[k] && a.indexOf(k) === i);
+  const aidCell = r => { const l = aidList(r.aids); if (!l.length && aidOf(r) > 0) return `<td class="aids" title="${esc(t("top.aidsUnknown"))}">–</td>`;
+    return l.length ? `<td class="aids" title="${esc(l.map(k => t("set." + k)).join(", "))}">${l.length}</td>` : "<td>0</td>"; };
+  const thIco = (key, svg) => `<th title="${esc(t(key))}"><span class="lbl">${esc(t(key))}</span><span class="ico" aria-hidden="true">${svg}</span></th>`;
+  const ICO_ERR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const ICO_HINT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>';
+  const ICO_AID = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.5-.4-.4-2.5z"/></svg>';
   const aidOf = r => +r.aid || 0;
   const total = r => (+r.secs || 0) + PENALTY * pens(r) + aidOf(r);
   // Rozpis trestu do textu: „2 × 30 s + 45 s za pomůcky“
@@ -778,7 +788,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   const penShort = r => [pens(r) ? pens(r) + " × 30 s" : "", aidOf(r) ? aidOf(r) + " s" : ""].filter(Boolean).join(" + ");
   const byRank = (a, b) => total(a) - total(b) || a.errors - b.errors || a.hints - b.hints || a.at - b.at;
   const clean = r => ({ id: String(r && r.id || ""), name: String(r && r.name || "").slice(0, 30), secs: Math.max(0, +r.secs || 0),
-    errors: Math.max(0, +r.errors || 0), hints: Math.max(0, +r.hints || 0), aid: Math.max(0, +r.aid || 0), at: +r.at || 0, debug: !!(r && r.debug) });
+    errors: Math.max(0, +r.errors || 0), hints: Math.max(0, +r.hints || 0), aid: Math.max(0, +r.aid || 0), aids: aidList(r && r.aids), at: +r.at || 0, debug: !!(r && r.debug) });
   const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const setNote = t => { $("top-note").textContent = t; };
   const sharedNote = () => "Společná tabulka všech hráčů. Výsledky se ukládají a načítají automaticky.";
@@ -882,7 +892,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   const MIN_SECS_PER_CELL = 2;
   const isSuspicious = st => !st.debug && st.secs < MIN_SECS_PER_CELL * st.given.filter(g => !g).length;
   function recordResult() {
-    const entry = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), level: S.level, secs: S.secs, errors: S.errors, hints: S.hints, ...(S.aid ? { aid: S.aid } : {}), at: Date.now(), ...(S.debug ? { debug: true } : {}), ...(isSuspicious(S) ? { review: true } : {}) };
+    const entry = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), level: S.level, secs: S.secs, errors: S.errors, hints: S.hints, ...(S.aid ? { aid: S.aid, aids: S.aids.slice() } : {}), at: Date.now(), ...(S.debug ? { debug: true } : {}), ...(isSuspicious(S) ? { review: true } : {}) };
     const rank = boardList(S.level).concat(entry).sort(byRank).findIndex(r => r.id === entry.id) + 1;
     if (rank < 1 || rank > 25) return 0;
     S.pending = entry;
@@ -935,8 +945,8 @@ html, body { max-width: 100%; overflow-x: hidden; }
     renderReview(); // rámeček schvalování vždy jen pro vybranou obtížnost (i když je žebříček prázdný)
     if (!list.length) { $("top-body").innerHTML = `<p class="empty">${esc(t("top.empty", { d: DIFF[lv].name }))}</p>`; return; }
     const df = new Intl.DateTimeFormat(L.locale || "cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
-    $("top-body").innerHTML = `<table><thead><tr><th>#</th><th>${esc(t("top.player"))}</th><th>${esc(t("top.time"))}</th><th>${esc(t("top.errors"))}</th><th>${esc(t("top.hints"))}</th><th>${esc(t("top.date"))}</th></tr></thead><tbody>` +
-      list.map((r, i) => `<tr class="${r.id === lastId ? "new" : ""}"><td class="r">${i + 1}.</td><td class="who">${esc(r.name || "—")}${r.debug ? '<span class="dbg" title="${esc(t("top.debug"))}"> *</span>' : ""}</td><td class="t${total(r) > r.secs ? " pen" : ""}"${total(r) > r.secs ? ` title="${fmt(r.secs)} + ${esc(penText(r))}"` : ""}>${fmt(total(r))}${total(r) > r.secs ? `<small>${fmt(r.secs)} + ${penShort(r)}</small>` : ""}</td><td>${r.errors}</td><td>${r.hints}</td><td>${r.at ? df.format(r.at) : ""}</td></tr>`).join("") +
+    $("top-body").innerHTML = `<table><thead><tr><th>#</th><th>${esc(t("top.player"))}</th><th>${esc(t("top.time"))}</th>${thIco("top.errors", ICO_ERR)}${thIco("top.hints", ICO_HINT)}${thIco("top.aids", ICO_AID)}<th>${esc(t("top.date"))}</th></tr></thead><tbody>` +
+      list.map((r, i) => `<tr class="${r.id === lastId ? "new" : ""}"><td class="r">${i + 1}.</td><td class="who">${esc(r.name || "—")}${r.debug ? '<span class="dbg" title="${esc(t("top.debug"))}"> *</span>' : ""}</td><td class="t${total(r) > r.secs ? " pen" : ""}"${total(r) > r.secs ? ` title="${fmt(r.secs)} + ${esc(penText(r))}"` : ""}>${fmt(total(r))}${total(r) > r.secs ? `<small>${fmt(r.secs)} + ${penShort(r)}</small>` : ""}</td><td>${r.errors}</td><td>${r.hints}</td>${aidCell(r)}<td>${r.at ? df.format(r.at) : ""}</td></tr>`).join("") +
       "</tbody></table>" +
       (list.some(r => total(r) > r.secs) ? '<p class="legend">' + t("top.legendPen") + '</p>' : "") +
       (list.some(r => r.debug) ? '<p class="legend"><span class="dbg">*</span>' + esc(t("top.legendDbg")) + '</p>' : "");
@@ -1155,6 +1165,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   $("notes").addEventListener("click", () => { notesMode = !notesMode; render(); });
   // ---------- Sdílení odkazu na hru ----------
   let toastTm = 0;
+  $("top-body").addEventListener("click", e => { const td = e.target.closest("td.aids[title]"); if (td) toast(td.title, 4000); }); // na mobilu title nejde zobrazit
   function toast(msg, ms = 2500) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toastTm); toastTm = setTimeout(() => { el.hidden = true; }, ms); }
   $("share").addEventListener("click", async () => {
     const url = location.origin + location.pathname;
