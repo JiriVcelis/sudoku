@@ -8,7 +8,8 @@
  */
 const SHEETS = { "": "Výsledky", "main": "Výsledky", "test": "Test" };
 const LEVELS = ["novice", "beginner", "easy", "medium", "hard", "expert"];
-const HEADER = ["id", "level", "name", "secs", "errors", "hints", "at", "debug", "validace"];
+const HEADER = ["id", "level", "name", "secs", "errors", "hints", "at", "debug", "validace", "pomucky", "pomucky_seznam"];
+const VAL_COL = 9; // sloupec "validace" (CHECK / OK); "pomucky" = sekundy trestu za zapnuté pomůcky
 // Počet čísel k doplnění podle obtížnosti a minimální čas na jedno číslo; rychlejší výsledky čekají na ověření.
 const EMPTY = { novice: 21, beginner: 27, easy: 33, medium: 41, hard: 49, expert: 56 };
 const MIN_SECS_PER_CELL = 2;
@@ -19,7 +20,7 @@ function sheet_(key) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(name);
   if (!sh) { sh = ss.insertSheet(name); sh.appendRow(HEADER); sh.setFrozenRows(1); }
-  if (sh.getRange(1, HEADER.length).getValue() === "") sh.getRange(1, HEADER.length).setValue(HEADER[HEADER.length - 1]);
+  for (let c = VAL_COL; c <= HEADER.length; c++) if (sh.getRange(1, c).getValue() === "") sh.getRange(1, c).setValue(HEADER[c - 1]);
   return sh;
 }
 function json_(o) {
@@ -36,11 +37,15 @@ function int_(v, max) {
 
 // Schválený = ve sloupci validace nic nebo OK.
 function approved_(v) { const s = String(v).trim().toUpperCase(); return s === "" || s === "OK"; }
+// Klíče pomůcek, které aplikace posílá (seznam se ukládá do sloupce pomucky_seznam).
+const AIDS_ = ["peers", "same", "autonotes", "count", "lock"];
 function row_(r) {
   return {
     id: String(r[0]), level: String(r[1]), name: String(r[2]).replace(/^'/, ""),
     secs: Number(r[3]) || 0, errors: Number(r[4]) || 0, hints: Number(r[5]) || 0,
-    at: Number(r[6]) || 0, debug: r[7] === true || String(r[7]).toUpperCase() === "TRUE"
+    at: Number(r[6]) || 0, debug: r[7] === true || String(r[7]).toUpperCase() === "TRUE",
+    aid: Number(r[9]) || 0,
+    aids: String(r[10] || "").split(",").filter(k => AIDS_.indexOf(k) >= 0)
   };
 }
 
@@ -80,7 +85,9 @@ function doPost(e) {
       const ids = rows_(sh).map(r => String(r[0]));
       if (ids.indexOf(id) >= 0) return json_({ ok: true, duplicate: true });
       const review = !x.debug && secs < MIN_SECS_PER_CELL * EMPTY[x.level];
-      sh.appendRow([id, x.level, name, secs, errors, hints, at, !!x.debug, review ? REVIEW : ""]);
+      const aid = int_(x.aid, 3600) || 0;
+      const aids = (Array.isArray(x.aids) ? x.aids : []).map(String).filter((k, i, a) => AIDS_.indexOf(k) >= 0 && a.indexOf(k) === i).join(",");
+      sh.appendRow([id, x.level, name, secs, errors, hints, at, !!x.debug, review ? REVIEW : "", aid, aids]);
       return json_({ ok: true, review: review });
     }
 
@@ -91,7 +98,7 @@ function doPost(e) {
       const data = rows_(sh);
       const i = data.findIndex(r => String(r[0]) === String(d.id || ""));
       if (i < 0) return json_({ ok: false, error: "notfound" });
-      if (d.action === "approve") sh.getRange(i + 2, HEADER.length).setValue("OK");
+      if (d.action === "approve") sh.getRange(i + 2, VAL_COL).setValue("OK");
       else sh.deleteRow(i + 2);
       return json_({ ok: true });
     }
